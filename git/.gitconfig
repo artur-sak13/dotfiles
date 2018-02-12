@@ -1,0 +1,22 @@
+[user]
+	name = artur-sak13
+	email = artursak1981@gmail.com
+[credential]
+	helper = osxkeychain
+[core]
+	autocrlf = input
+	excludesfile = /Users/Artur/.gitignore
+[alias]
+	graph = log --graph --color --pretty=format:"%C(yellow)%H%C(green)%d%C(reset)%n%x20%cd%n%x20%cn%C(blue)%x20(%ce)%x20%C(cyan)[gpg:%GK%x20%G?]%C(reset)%n%x20%s%n"
+	stat = status -sb
+	last = log -1 --stat
+	unstage = reset HEAD --
+	cached = diff --cached
+	d = difftool
+[color]
+	ui = auto
+[diff]
+	tool = vimdiff
+[difftool]
+	prompt = false
+
