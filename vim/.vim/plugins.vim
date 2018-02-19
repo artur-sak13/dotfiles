@@ -20,6 +20,7 @@ Plug 'roxma/vim-tmux-clipboard'         "Vim and Tmux clipboard integration
 " Code Formatting
 Plug 'tpope/vim-surround'               "Easily delete, add, or replace surroundings (i.e. parenthesis, brackets, etc.)
 Plug 'tpope/vim-endwise'                "End certain structures automatically (i.e. end after if, do, def, etc.)
+Plug 'tpope/vim-fugitive'				"Nice git integration
 Plug 'godlygeek/tabular'                "Regex code alignment
 Plug 'Raimondi/delimitMate'             "Autoclose quotes, parenthesis, brackets, etc.
 Plug 'Chiel92/vim-autoformat'           "External formatting program integration
@@ -29,15 +30,14 @@ Plug 'Chiel92/vim-autoformat'           "External formatting program integration
 Plug 'w0rp/ale'                         "Asynchronous lint engine
 
 " Extensions/Additions
-Plug 'majutsushi/tagbar'                "Project structure sidebar using tags
+Plug 'majutsushi/tagbar'                "Project structure sidebar
 Plug 'matze/vim-move'                   "Delete and paste text blocks in as visual drag blocks
 Plug 'scrooloose/nerdtree'              "Tree file system explorer for Vim
 Plug 'sjl/gundo.vim'                    "Undo tree visualization
-Plug 'nathanaelkane/vim-indent-guides'  "Display indent levels in Vim
 Plug 'terryma/vim-multiple-cursors'     "Sublime Text style multiple selection for Vim
 
 "Asynchronous keyword completion
-Plug 'Shougo/deoplete.nvim', has('nvim') ? {} : { 'do': ':UpdateRemotePlugins'}
+Plug 'Shougo/deoplete.nvim', has('nvim') ? {} : { 'do': [':UpdateRemotePlugins',':set runtimepath+=~/.dotfiles/vim/.vim/plugged/deoplete.nvim/']}
 
 " Git
 Plug 'airblade/vim-gitgutter'           "Asynchronously displays a git diff in the sign column
@@ -58,16 +58,12 @@ Plug 'neovimhaskell/haskell-vim'        "Improved syntax highlighting and indent
 " Elm
 Plug 'pbogut/deoplete-elm'				"Completion plugin for Elm
 
-" Rust
-Plug 'sebastianmarkow/deoplete-rust'    "Completion plugin for Rust (Note: run cargo install racer)
-
 " Themes
-Plug 'vim-airline/vim-airline'          "Status/tabline for Vim
-Plug 'vim-airline/vim-airline-themes'   "Themes for airline status line
+Plug 'itchyny/lightline.vim'            "Minimal statusline
+Plug 'chriskempson/base16-vim'			"Base16 colorscheme
 
 " Color
 Plug 'luochen1990/rainbow'              "Color codes matching parenthesis and other surroundings
 Plug 'lilydjwg/colorizer'               "Colorize all text denoting rgb/rgba colors
-Plug 'chriskempson/base16-vim'          "Base16 color schemes for Vim
 
 call plug#end()

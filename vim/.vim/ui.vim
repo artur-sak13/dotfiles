@@ -40,11 +40,11 @@ set number
 " Highlight cursor
 set cursorline
 
-" True Colors
-set termguicolors
-
 " Fix TERM
 set t_Co=256
+
+" 256 colorspace
+let base16colorspace=256  
 
 " Set UTF-8 as standard encoding and en_US as the standard language
 set encoding=utf8
