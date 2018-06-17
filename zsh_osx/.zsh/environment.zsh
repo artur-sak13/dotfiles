@@ -8,6 +8,14 @@ export RBENV_ROOT="$HOME/.rbenv"
 export NVM_DIR="$HOME/.nvm"
 export HOMEBREW_PREFIX="/usr/local"
 
+
+export AWS_REGION=us-east-2
+export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
+export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
+export KOPS_STATE_STORE=s3://twopoint-state-store
+export NAME=twopoint.k8s.local
+export ZONES=us-east-2a,us-east-2b,us-east-2c
+
 export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 
 path=(

@@ -10,3 +10,7 @@ eval "$(rbenv init -)"
 eval "$(pyenv virtualenv-init -)"
 eval "$(thefuck --alias)"
 
+source <(kops completion zsh)
+source <(kubectl completion zsh)
+source <(helm completion zsh)
+

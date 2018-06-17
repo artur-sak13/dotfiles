@@ -31,3 +31,7 @@ alias emptytrash="sudo rm -rfv /Volumes/*/.Trashes; sudo rm -rfv ~/.Trash; sudo 
 alias flush="dscacheutil -flushcache && killall -HUP mDNSResponder"
 alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
 alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
+
+alias ksys="kubectl -n kube-system"
+alias k="kubectl"
+
