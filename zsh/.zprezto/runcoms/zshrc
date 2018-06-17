@@ -1,0 +1,63 @@
+# Source prezto dotfiles
+if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
+  source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
+fi
+
+source "$HOME/.zsh/.aliases.zsh"
+fpath=($HOME/.zsh/completion $fpath)
+
+unset TMOUT
+export EDITOR=nvim
+export FPATH
+
+export PYENV_ROOT="$HOME/.pyenv"
+export GOROOT="/usr/local/go"
+export GOPATH=$HOME/go
+export PATH="$PYENV_ROOT/bin:$HOME/.local/bin:$GOROOT/bin:$GOPATH/bin:$PATH"
+
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+export AWS_REGION=us-east-2
+export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
+export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
+export KOPS_STATE_STORE=$S3_STATE
+export NAME=twopoint.k8s.local
+export ZONES=us-east-2a,us-east-2b,us-east-2c
+
+alias ksys="kubectl -n kube-system"
+alias k="kubectl"
+
+
+source <(kops completion zsh)
+source <(kubectl completion zsh)
+source <(helm completion zsh)
+
+helmins() {
+	kubectl -n kube-system create serviceaccount tiller
+	kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+	helm init --service-account=tiller
+}
+
+helmdel() {
+	kubectl -n kube-system delete deployment tiller-deploy
+    kubectl -n kube-system delete svc tiller-deploy
+	kubectl delete clusterrolebinding tiller
+	kubectl -n kube-system delete serviceaccount tiller
+}
+
+weaveproxy() { 
+	kubectl port-forward -n weave "$(kubectl get -n weave pod --selector=weave-scope-component=app -o jsonpath='{.items..metadata.name}')" 4040
+}
+
+coreos_ver () {
+	curl -s https://coreos.com/dist/aws/aws-stable.json | jq -r '.["us-east-2"].hvm'
+}
+
+whatsmyip() {
+	dig +short myip.opendns.com @resolver1.opendns.com  
+}
+
+digga() {
+	dig +nocmd "$1" any +multiline +noall +answer
+}
