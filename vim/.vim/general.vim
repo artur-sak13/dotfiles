@@ -55,9 +55,16 @@ let g:mapleader =','
 " Fast saving
 nmap <leader>w :w!<cr>
 
+" Remove search highlight
+nnoremap <leader><space> :nohlsearch<CR>
+
+" Center screen
+nmap <space> zz
+
 " Ignore case when searching
 set ignorecase
-set infercase
+set smartcase
+set ttyfast
 
 " Set backspace
 set backspace=indent,start,eol
@@ -68,8 +75,16 @@ set hlsearch
 " Incremental search as characters are typed
 set incsearch
 
-" Don't expand tabs to spaces
-set noexpandtab
+" Expand tabs to spaces
+set expandtab
+
+set nrformats-=octal
+set shiftround
+
+" Time out on keycodes but not mappings.
+set notimeout
+set ttimeout
+set ttimeoutlen=10
 
 " Set tabs to have 4 spaces
 set shiftwidth=4
@@ -94,12 +109,34 @@ set smartindent
 
 "Wrap lines
 set wrap
+set textwidth=79
+set formatoptions=qrn1
+
+set complete-=i
+set complete=.,w,b,u,t
+set completeopt=longest,menuone
+
+set showmatch
+set smarttab
+
+if !empty(&viminfo)
+	set viminfo^=!
+endif
+
+" Split vertical windows right
+set splitright
+
+" Split horizontal windows below
+set splitbelow
 
 " When vimrc is edited, reload it
-autocmd! BufWritePost .vimrc source %
+autocmd! BufWritePost $VIMRC source %
 
 " Set default shell
 set shell=$SHELL
+
+" Allow saving of files when forgetting to start vim using sudo
+cmap w!! w !sudo tee > /dev/null %
 
 " Set xterm2 mouse mode to allow resizing of splits with mouse inside tmux
 if !has('nvim')
@@ -113,10 +150,17 @@ if has('nvim')
 end
 
 " Toggle spellcheck
-:map <Leader>s :setlocal spell! spelllang=en_us<CR>
+nnoremap <leader>s :setlocal spell! spell?<CR>
 
 " Use system clipboard
 set clipboard=unnamedplus
 
 " Fast reload vimrc
 map <leader>vi :so $MYVIMRC<CR>
+
+set nocursorcolumn
+set nocursorline
+
+syntax sync minlines=256
+set synmaxcol=300
+set re=1

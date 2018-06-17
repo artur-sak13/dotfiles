@@ -38,7 +38,8 @@ map <silent> <leader><cr> :noh<cr>
 set number
 
 " Highlight cursor
-set cursorline
+" set cursorline
+" highlight clear CursorLine
 
 " Fix TERM
 set t_Co=256
