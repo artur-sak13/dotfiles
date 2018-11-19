@@ -24,10 +24,11 @@ Plug 'tpope/vim-fugitive'				"Nice git integration
 Plug 'godlygeek/tabular'                "Regex code alignment
 Plug 'Raimondi/delimitMate'             "Autoclose quotes, parenthesis, brackets, etc.
 Plug 'Chiel92/vim-autoformat'           "External formatting program integration
+Plug 'neomake/neomake'					"Asynchronously run programs
 " Plug 'junegunn/vim-easy-align'         Potential substitute for tabular alignment
 
 " Linting
-Plug 'w0rp/ale'                         "Asynchronous lint engine
+" Plug 'w0rp/ale'                       "Asynchronous lint engine
 
 " Extensions/Additions
 Plug 'majutsushi/tagbar'                "Project structure sidebar
@@ -60,10 +61,14 @@ Plug 'pbogut/deoplete-elm'				"Completion plugin for Elm
 
 " Themes
 Plug 'itchyny/lightline.vim'            "Minimal statusline
-Plug 'chriskempson/base16-vim'			"Base16 colorscheme
 
 " Color
 Plug 'luochen1990/rainbow'              "Color codes matching parenthesis and other surroundings
 Plug 'lilydjwg/colorizer'               "Colorize all text denoting rgb/rgba colors
+
+" Terraform
+Plug 'hashivim/vim-terraform'
+Plug 'vim-syntastic/syntastic'
+Plug 'juliosueiras/vim-terraform-completion'
 
 call plug#end()

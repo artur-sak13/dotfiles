@@ -31,12 +31,27 @@ Temporary Items
 *.pyc
 
 # Compiled C++ files
+*.lo
+*.slo
 *.out
+*.obj
 
 # C/C++ object files
 *.o
+*.ko
+*.obj
+*.elf
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
 
 # Application specific files
-venv
+.venv
 node_modules
 .sass-cache
+
+.uuid
+.gnupg
+!.gnupg/gpg*.conf

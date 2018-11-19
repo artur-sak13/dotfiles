@@ -1,17 +1,18 @@
+#!/bin/bash
 ###############################################################
 # => Prompt
 ###############################################################
-export ZSH_THEME="lambda-pure"
 
 #Oh-My-Zsh Plugins
+# shellcheck disable=SC2034
 plugins=(
 	brew 
-	cabal 
 	hacker-quotes 
-	sublime 
-	wd 
-	base16-shell 
+	wd
+  base16-shell
+  zsh-autosuggestions
 	fast-syntax-highlighting
 	)
 
-source "$ZSH/oh-my-zsh.sh"
+# shellcheck source=/dev/null
+source "${ZSH}/oh-my-zsh.sh"

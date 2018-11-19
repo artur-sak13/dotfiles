@@ -37,9 +37,6 @@ map <silent> <leader><cr> :noh<cr>
 " Show line numbers
 set number
 
-" Highlight cursor
-set cursorline
-
 " Fix TERM
 set t_Co=256
 

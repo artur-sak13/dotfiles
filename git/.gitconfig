@@ -1,22 +1,71 @@
 [user]
-	name = artur-sak13
-	email = artursak1981@gmail.com
+	name = artur.sak
+	email = artur.sak@twopoint.com
+	signingkey = C2AABCF42E1405B7
 [credential]
 	helper = osxkeychain
 [core]
 	autocrlf = input
-	excludesfile = /Users/Artur/.gitignore
+	excludesfile = ~/.gitignore
+	trustctime = false
+	editor = nvim
+[apply]
+	whitespace = fix
 [alias]
+	# Color graph log view
 	graph = log --graph --color --pretty=format:"%C(yellow)%H%C(green)%d%C(reset)%n%x20%cd%n%x20%cn%C(blue)%x20(%ce)%x20%C(cyan)[gpg:%GK%x20%G?]%C(reset)%n%x20%s%n"
-	stat = status -sb
 	last = log -1 --stat
 	unstage = reset HEAD --
 	cached = diff --cached
-	d = difftool
+	status = status -sb
+
+	# Show verbose output about tags branches or remotes
+	tags = tag -l
+	branches = branch -a
+	remotes = remote -v
+
+	# from trevor bramble https://twitter.com/TrevorBramble/status/774292970681937920
+	alias=!git config -l | grep ^alias | cut -c 7- | sort
+
+	# List contributors with number of commits
+	contributors = shortlog --summary --numbered
+
+	up = !git pull origin master && git remote prune origin && git submodule update --init --recursive
+	undo = !git reset HEAD~1 --mixed
+	top = !git log --format=format:%an | sort | uniq -c | sort -r | head -n 20
+
+	# Pull in remote changes for the current repo and all its submodules
+	p = !"git pull; git submodule foreach git pull origin master"
+
+	# Clone a repository including any submodules
+	c = clone --recursive
+
+	# Commit all changes
+	ca = !git add -A && git commit -av
+
+	# Show the diff between the latest commit and the current state
+	d = !"git diff-index --quiet HEAD -- || clear; git --no-pager diff --patch-with-stat"
+
+	# View abbreviated SHA, description, and history graph of latest 20 commits
+	l = log --pretty=oneline -n 20 --graph --abbrev-commit
+
+	# Delete branches the have been merged with master
+	dm = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d; git remote -v update -p"
 [color]
 	ui = auto
 [diff]
-	tool = vimdiff
+	tool = vimdiff3
+	renames = copies
 [difftool]
+    prompt = false
+[help]
+	autocorrect = 1
+[merge]
+	tool = vimdiff3
+	conflictstyle = diff3
 	prompt = false
-
+	log = true
+[url "git@gitlab.twopoint.io:"]
+    insteadOf = https://gitlab.twopoint.io/
+[commit]
+	gpgsign = true
