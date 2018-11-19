@@ -26,6 +26,7 @@ path=(
 	/bin
 	/sbin
 	/usr/bin
+	/usr/games
 	/usr/sbin
 	/opt/X11/bin
 	)

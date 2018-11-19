@@ -37,11 +37,12 @@ if [ -f "${HOME}/.travis/travis.sh" ]; then source "${HOME}/.travis/travis.sh"; 
 source <(kops completion zsh)
 # shellcheck source=/dev/null
 source <(kubectl completion zsh)
-# shellcheck source=/dev/null
-source <(helm completion zsh)
 
-eval "$(pyenv init -)"
-eval "$(rbenv init -)"
+# shellcheck source=/dev/null
+if hash helm 2>/dev/null; then source <(helm completion zsh); fi
+
+if hash pyenv 2>/dev/null; then eval "$(pyenv init -)"; fi
+if hash rbenv 2>/dev/null; then eval "$(rbenv init -)"; fi
 
 
 if ! unset TMOUT > /dev/null 2>&1; then

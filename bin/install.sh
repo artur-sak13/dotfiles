@@ -4,27 +4,6 @@ set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive 
 
-# Choose a user account to use for this installation
-get_user() {
-	if [ -z "${TARGET_USER-}" ]; then
-		mapfile -t options < <(find ~/* -maxdepth 0 -printf "%f\\n" -type d)
-		# if there is only one option just use that user
-		if [ "${#options[@]}" -eq "1" ]; then
-			readonly TARGET_USER="${options[0]}"
-			echo "Using user account: ${TARGET_USER}"
-			return
-		fi
-
-		# iterate through the user options and print them
-		PS3='Which user account should be used? '
-
-		select opt in "${options[@]}"; do
-			readonly TARGET_USER=$opt
-			break
-		done
-	fi
-}
-
 check_is_sudo() {
 	if [ "$EUID" -ne 0 ]; then
 		echo "Please run as root."
@@ -118,6 +97,9 @@ base_min() {
 		mount \
 		net-tools \
 		neovim \
+        python3 \
+        python3-pip \
+        python3-setuptools \
 		ssh \
 		strace \
 		sudo \
@@ -127,6 +109,7 @@ base_min() {
 		unzip \
 		xz-utils \
 		zip \
+        zsh \
 		--no-install-recommends
 
 	apt autoremove
@@ -166,9 +149,15 @@ base() {
 	apt clean
 }
 
+install_oh_my_zsh(){
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+    local user="$USER"
+    chsh -s /bin/zsh "${user}" 
+}
+
 install_homebrew() {
   /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-	brew bundle install --file="${HOME}/.dotfiles/brew/Brewfile"
+	brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
 }
 
 # install rust
@@ -224,10 +213,10 @@ get_dotfiles() {
 
 	if [[ ! -d "${HOME}/dotfiles" ]]; then
 		# install dotfiles from repo
-		git clone git@github.com:artur-sak13/dotfiles.git "${HOME}/.dotfiles"
+		git clone git@github.com:artur-sak13/dotfiles.git "${HOME}/dotfiles"
 	fi
 
-	cd "${HOME}/.dotfiles"
+	cd "${HOME}/dotfiles"
 
 	# installs all the things
 	make
@@ -241,7 +230,7 @@ usage() {
 	echo "Usage:"
 	echo "  base                                - setup sources & install base pkgs"
 	echo "  basemin                             - setup sources & install base min pkgs"
-  echo "  homebrew                            - install homebrew"
+    echo "  homebrew                            - install homebrew"
 	echo "  dotfiles                            - get dotfiles"
 	echo "  golang                              - install golang and packages"
 	echo "  rust                                - install rust"
@@ -257,19 +246,17 @@ main() {
 	if [[ $cmd == "base" ]]; then
 		if [[ "$OSTYPE" != darwin* ]]; then
 			check_is_sudo
-			get_user
 			setup_sources
 			base
 		fi
 	elif [[ $cmd == "basemin" ]]; then
 		if [[ "$OSTYPE" != darwin* ]]; then
 			check_is_sudo
-			get_user
 			setup_sources_min
 			base_min
 		fi
 	elif [[ $cmd == "dotfiles" ]]; then
-		get_user
+        install_oh_my_zsh
 		get_dotfiles
 	elif [[ $cmd == "rust" ]]; then
 		install_rust

@@ -1,5 +1,8 @@
 PREFIX?=$(shell pwd)
 
+.PHONY: all
+all: bin dotfiles
+
 .PHONY: bin
 bin: ## Installs the bin directory files.
 			# create symlinks for files in bin
@@ -11,7 +14,7 @@ bin: ## Installs the bin directory files.
 .PHONY: dotfiles
 dotfiles: ## Installs the dotfiles.
 			# add aliases for dotfiles
-			for file in $(shell find $(CURDIR) -name ".*" -not -name ".gitignore" -not -name ".travis.yml" -not -name ".git" -not -name ".gnupg"); do \
+			for file in $(shell find $(CURDIR) -name ".*" ! -name ".gitignore" ! -name ".gitconfig" ! -name ".travis.yml" ! -name ".aws" ! -name ".brew" ! -name ".git" ! -name ".gnupg" ! -path "*vim*"); do \
 							f=$$(basename $$file); \
 							ln -sfn $$file $(HOME)/$$f; \
 			done; \
@@ -19,13 +22,14 @@ dotfiles: ## Installs the dotfiles.
 			ln -sfn $(CURDIR)/.gnupg/gpg.conf $(HOME)/.gnupg/gpg.conf;
 			ln -sfn $(CURDIR)/.gnupg/gpg-agent.conf $(HOME)/.gnupg/gpg-agent.conf;
 			ln -sfn $(CURDIR)/git/.gitignore $(HOME)/.gitignore;
-			ln -sfn $(CURDIR)/git/.gitconfig $(HOME)/.gitignore;
-			git update-index --skip-worktree $(CURDIR)/.gitconfig;
+			ln -sfn $(CURDIR)/git/.gitconfig $(HOME)/.gitconfig;
 			mkdir -p $(HOME)/.config;
 			mkdir -p $(HOME)/.local/share;
 			mkdir -p $(HOME)/.aws/cli;
 			ln -snf $(CURDIR)/.aws/cli/alias $(HOME)/.aws/cli/alias;
-			ln -snf $(CURDIR)/.fonts $(HOME)/.local/share/fonts;
+			sudo ln -snf $(CURDIR)/zsh/.lambda/lambda-pure.zsh /usr/local/share/zsh/site-functions/prompt_lambda-pure_setup;
+			sudo ln -snf $(CURDIR)/zsh/.lambda/async.zsh /usr/local/share/zsh/site-functions/async;
+			ln -snf $(CURDIR)/zsh/.lambda/lambda-pure.zsh $(HOME)/.oh-my-zsh/custom/themes/lambda-pure.zsh-theme;
 			if [ -f /usr/local/bin/pinentry ]; then \
 				sudo ln -snf /usr/bin/pinentry /usr/local/bin/pinentry; \
 			fi;

@@ -46,9 +46,6 @@ Plug 'Xuyuanp/nerdtree-git-plugin'      "Show git repo status on NERDTree
 
 Plug 'sheerun/vim-polyglot'             "A collection of language packs for Vim
 
-" Markdown
-Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
-
 " LaTeX
 Plug 'donRaphaco/neotex', { 'for': 'tex' }
 
