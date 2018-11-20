@@ -91,15 +91,19 @@ base_min() {
 		jq \
 		less \
 		libc6-dev \
+		libevent-dev \
+		libncurses5-dev \
+		libncursesw5-dev \
 		locales \
 		lsof \
 		make \
 		mount \
 		net-tools \
 		neovim \
-        python3 \
-        python3-pip \
-        python3-setuptools \
+		pkg-config \
+		python3 \
+		python3-pip \
+		python3-setuptools \
 		ssh \
 		strace \
 		sudo \
@@ -109,7 +113,7 @@ base_min() {
 		unzip \
 		xz-utils \
 		zip \
-        zsh \
+		zsh \
 		--no-install-recommends
 
 	apt autoremove
@@ -160,13 +164,29 @@ install_homebrew() {
 	brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
 }
 
+install_tmux() {
+	(
+	if [[ ! -d "${HOME}/tmux" ]]; then
+		git clone https://github.com/tmux/tmux.git "${HOME}/tmux"
+	fi
+	
+	cd "${HOME}/tmux"
+	
+	sh autogen.sh
+	
+	./configure && make
+	
+	sudo mv tmux /usr/local/bin
+	)
+}
+
 # install rust
 install_rust() {
 	curl https://sh.rustup.rs -sSf | sh
 }
 
 install_golang() {
-  export GO_VERSION
+	export GO_VERSION
 	GO_VERSION=$(curl -sSL "https://golang.org/VERSION?m=text")
 	export GO_SRC=/usr/local/go
 
@@ -230,7 +250,7 @@ usage() {
 	echo "Usage:"
 	echo "  base                                - setup sources & install base pkgs"
 	echo "  basemin                             - setup sources & install base min pkgs"
-    echo "  homebrew                            - install homebrew"
+	echo "  homebrew                            - install homebrew"
 	echo "  dotfiles                            - get dotfiles"
 	echo "  golang                              - install golang and packages"
 	echo "  rust                                - install rust"
@@ -256,7 +276,8 @@ main() {
 			base_min
 		fi
 	elif [[ $cmd == "dotfiles" ]]; then
-        install_oh_my_zsh
+		install_oh_my_zsh
+		install_tmux
 		get_dotfiles
 	elif [[ $cmd == "rust" ]]; then
 		install_rust
