@@ -1,8 +1,10 @@
-language: shell
+language: python
 sudo: required
 notifications:
   email: true
 services:
   - docker
+before_script:
+  - pip install --user vim-vint pathlib enum34 typing
 script:
   - make test

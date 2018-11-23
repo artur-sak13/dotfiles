@@ -36,10 +36,10 @@ nodeup() {
 
 # Update python packages
 pyup() {
-	pip install --upgrade pip
-	pip freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install --upgrade
-	pip3 install --upgrade pip
-	pip3 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install --upgrade
+	pip2 install --user --upgrade pip
+	pip2 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install --user --upgrade
+	pip3 install --user --upgrade pip
+	pip3 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install --user --upgrade
 }
 
 # Update all the things!

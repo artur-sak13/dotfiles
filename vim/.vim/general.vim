@@ -130,7 +130,10 @@ set splitright
 set splitbelow
 
 " When vimrc is edited, reload it
-autocmd! BufWritePost $VIMRC source %
+augroup cfg
+    au!
+    au! BufWritePost $VIMRC source %
+augroup END
 
 " Set default shell
 set shell=$SHELL

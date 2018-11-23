@@ -6,7 +6,9 @@ set runtimepath+=~/.vim/
 "Pull in Vim Plug if not there already
 if empty(glob('~/.vim/autoload/plug.vim'))
     silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+    augroup install
+        au VimEnter * PlugInstall --sync | source $MYVIMRC
+    augroup END
 endif
 
 call plug#begin('~/.vim/plugged')
@@ -45,16 +47,6 @@ Plug 'airblade/vim-gitgutter'           "Asynchronously displays a git diff in t
 Plug 'Xuyuanp/nerdtree-git-plugin'      "Show git repo status on NERDTree
 
 Plug 'sheerun/vim-polyglot'             "A collection of language packs for Vim
-
-" LaTeX
-Plug 'donRaphaco/neotex', { 'for': 'tex' }
-
-" Haskell
-Plug 'eagletmt/neco-ghc'                "Completion plugin for Haskell, using ghc-mod
-Plug 'neovimhaskell/haskell-vim'        "Improved syntax highlighting and indentation for Haskell and Cabal
-
-" Elm
-Plug 'pbogut/deoplete-elm'				"Completion plugin for Elm
 
 " Themes
 Plug 'itchyny/lightline.vim'            "Minimal statusline

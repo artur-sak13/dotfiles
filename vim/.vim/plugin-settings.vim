@@ -1,6 +1,9 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Plugin settings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Use scriptencoding when multibyte char exists
+scriptencoding utf-8
+
 " NERDTree Configuration
 map <leader>n :NERDTreeToggle<CR>
 
@@ -45,7 +48,7 @@ call neomake#configure#automake('nrwi', 500)
 
 " Tabular
 " Align equals with `<,>a`
-if exists(":Tabularize")
+if exists(':Tabularize')
     nmap <leader>a= :Tabularize /=<CR>
     vmap <leader>a= :Tabularize /=<CR>
     nmap <leader>a: :Tabularize /:<CR>
@@ -71,8 +74,8 @@ let g:gundo_close_on_revert = 1
 
 " Deoplete
 if has('nvim')
-  let g:python_host_prog = "/usr/bin/python"
-  let g:python3_host_prog = "/usr/bin/python3"
+  let g:python_host_prog = '/usr/local/bin/python2'
+  let g:python3_host_prog = '/usr/local/bin/python3'
   let g:deoplete#enable_ignore_case = 1
   let g:deoplete#enable_at_startup = 1
   let g:deoplete#ignore_sources = {}
@@ -86,7 +89,7 @@ if has('nvim')
   call deoplete#custom#source('_', 'disabled_syntaxes', ['Comment', 'String'])
 endif
 
-if has("autocmd")
+if has('autocmd')
     filetype plugin indent on
     " Omnifuncs
     augroup omnifuncs
@@ -108,21 +111,16 @@ endif
 let b:vcm_tab_complete = 'omni'
 set omnifunc=syntaxcomplete#Complete
 
-au CursorMovedI,InsertLeave * if pumvisible() == 0|silent! pclose|endif
+augroup moved
+    au CursorMovedI,InsertLeave * if pumvisible() == 0|silent! pclose|endif
+augroup END
+
 set completeopt=menuone,menu,longest,preview
 
-au BufNewFile,BufRead *.vim setlocal noet ts=4 sw=4 sts=4
-au BufNewFile,BufRead *.yml,*.yaml setlocal expandtab ts=2 sw=2
-au BufNewFile,BufRead *.go setlocal noet ts=4 sw=4 sts=4
-
-" Haskell
-let g:haskellmode_completion_ghc = 1
-autocmd FileType haskell set softtabstop=4
-autocmd FileType haskell set tabstop=4
-autocmd FileType haskell set shiftwidth=4
-autocmd FileType haskell set shiftround
-
 augroup filetypedetect
+    au BufNewFile,BufRead *.vim setlocal noet ts=4 sw=4 sts=4
+    au BufNewFile,BufRead *.yml,*.yaml setlocal expandtab ts=2 sw=2
+    au BufNewFile,BufRead *.go setlocal noet ts=4 sw=4 sts=4
     au BufNewFile,BufRead .tmux.conf*,tmux.conf* setf tmux
 augroup END
 

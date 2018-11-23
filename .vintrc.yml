@@ -1,0 +1,15 @@
+cmdargs:
+  severity: style_problem
+
+  color: true
+
+  env:
+    neovim: true
+
+policies:
+  ProhibitImplicitScopeVariable:
+    enabled: false
+  ProhibitAbbreviationOption:
+    enabled: false
+  ProhibitSetNoCompatible:
+    enabled: false

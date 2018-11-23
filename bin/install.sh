@@ -4,6 +4,26 @@ set -o pipefail
 
 export DEBIAN_FRONTEND=noninteractive 
 
+get_user() {
+	if [ -z "${TARGET_USER-}" ]; then
+		mapfile -t options < <(find /home/* -maxdepth 0 -printf "%f\\n" -type d)
+		# if there is only one option just use that user
+		if [ "${#options[@]}" -eq "1" ]; then
+			readonly TARGET_USER="${options[0]}"
+			echo "Using user account: ${TARGET_USER}"
+			return
+		fi
+
+		# iterate through the user options and print them
+		PS3='Which user account should be used? '
+
+		select opt in "${options[@]}"; do
+			readonly TARGET_USER=$opt
+			break
+		done
+	fi
+}
+
 check_is_sudo() {
 	if [ "$EUID" -ne 0 ]; then
 		echo "Please run as root."
@@ -22,7 +42,7 @@ setup_sources_min() {
 		lsb-release \
 		--no-install-recommends
 
-	# hack for latest git
+	# latest git
 	cat <<-EOF > /etc/apt/sources.list.d/git-core.list
 	deb http://ppa.launchpad.net/git-core/ppa/ubuntu xenial main
 	deb-src http://ppa.launchpad.net/git-core/ppa/ubuntu xenial main
@@ -54,10 +74,13 @@ setup_sources() {
 	cat <<-EOF > /etc/apt/sources.list
 	deb http://httpredir.debian.org/debian stretch main contrib non-free
 	deb-src http://httpredir.debian.org/debian/ stretch main contrib non-free
+
 	deb http://httpredir.debian.org/debian/ stretch-updates main contrib non-free
 	deb-src http://httpredir.debian.org/debian/ stretch-updates main contrib non-free
+
 	deb http://security.debian.org/ stretch/updates main contrib non-free
 	deb-src http://security.debian.org/ stretch/updates main contrib non-free
+
 	deb http://httpredir.debian.org/debian experimental main contrib non-free
 	deb-src http://httpredir.debian.org/debian experimental main contrib non-free
 	EOF
@@ -147,10 +170,32 @@ base() {
 		xclip \
 		xcompmgr \
 		--no-install-recommends
+	
+	setup_sudo
 
 	apt autoremove
 	apt autoclean
 	apt clean
+}
+
+setup_sudo() {
+	adduser "$TARGET_USER" sudo
+
+	gpasswd -a "$TARGET_USER" systemd-journal
+	gpasswd -a "$TARGET_USER" systemd-network
+
+	sudo groupadd docker
+	sudo gpasswd -a "$TARGET_USER" docker
+
+	{ \
+		echo -e "Defaults	secure_path=\"/usr/local/go/bin:/home/${TARGET_USER}/.go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/bcc/tools\""; \
+		echo -e 'Defaults	env_keep += "ftp_proxy http_proxy https_proxy no_proxy GOPATH EDITOR"'; \
+		echo -e "${TARGET_USER} ALL=(ALL) NOPASSWD:ALL"; \
+		echo -e "${TARGET_USER} ALL=NOPASSWD: /sbin/ifconfig, /sbin/ifup, /sbin/ifdown, /sbin/ifquery"; \
+	 } >> /etc/sudoers
+
+	 mkdir -p "/home/$TARGET_USER/Downloads"
+	 echo -e "\\n# tmpfs for downloads\\ntmpfs\\t/home/${TARGET_USER}/Downloads\\ttmpfs\\tnodev,nosuid,size=2G\\t0\\t0" >> /etc/fstab
 }
 
 install_oh_my_zsh(){
@@ -241,6 +286,11 @@ get_dotfiles() {
 	# installs all the things
 	make
 
+	if [[ "$OSTYPE" != darwin* ]]; then
+		sudo systemctl enable systemd-networkd systemd-resolved
+		sudo systemctl start systemd-networkd systemd-resolved
+	fi
+
 	cd "$HOME"
 	)
 }
@@ -266,16 +316,19 @@ main() {
 	if [[ $cmd == "base" ]]; then
 		if [[ "$OSTYPE" != darwin* ]]; then
 			check_is_sudo
+			get_user
 			setup_sources
 			base
 		fi
 	elif [[ $cmd == "basemin" ]]; then
 		if [[ "$OSTYPE" != darwin* ]]; then
 			check_is_sudo
+			get_user
 			setup_sources_min
 			base_min
 		fi
 	elif [[ $cmd == "dotfiles" ]]; then
+		get_user
 		install_oh_my_zsh
 		install_tmux
 		get_dotfiles
@@ -289,4 +342,3 @@ main() {
 }
 
 main "$@"
-

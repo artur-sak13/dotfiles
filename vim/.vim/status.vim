@@ -1,6 +1,8 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Statusline
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Use scriptencoding when multibyte char exists
+scriptencoding utf-8
 
 set laststatus=2
 let g:lightline = {
@@ -31,7 +33,7 @@ let g:lightline = {
   \ }
 
 function! Modified()
-  return &filetype =~ 'help\|vimfiler' ? '' : &modified ? '+' : &modifiable ? '' : ''
+  return &filetype =~# 'help\|vimfiler' ? '' : &modified ? '+' : &modifiable ? '' : ''
 endfunction
 
 function! Readonly()
@@ -48,11 +50,11 @@ endfunction
 
 function! FileName()
   let l:name = expand('%:t')
-  if l:name =~ 'NetrwTreeListing'
+  if l:name =~# 'NetrwTreeListing'
     return ''
   endif
-  return ('' != Readonly() ? Readonly() : Modified()) .
-        \ ('' != expand('%:t') ? expand('%:t') : '[none]') 
+  return ('' !=# Readonly() ? Readonly() : Modified()) .
+        \ ('' !=# expand('%:t') ? expand('%:t') : '[none]') 
 endfunction
 
 function! FileType()

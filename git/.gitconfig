@@ -17,7 +17,7 @@
 	last = log -1 --stat
 	unstage = reset HEAD --
 	cached = diff --cached
-	status = status -sb
+	stat = status -sb
 
 	# Show verbose output about tags branches or remotes
 	tags = tag -l
