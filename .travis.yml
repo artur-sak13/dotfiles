@@ -5,6 +5,6 @@ notifications:
 services:
   - docker
 before_script:
-  - pip install --user vim-vint pathlib enum34 typing
+  - pip install vim-vint pathlib enum34 typing
 script:
   - make test
