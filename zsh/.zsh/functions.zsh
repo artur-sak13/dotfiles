@@ -248,6 +248,18 @@ digga() {
 	dig +nocmd "$1" any +multiline +noall +answer
 }
 
+# Run comprehensive nmap
+fukmap() {
+	sudo nmap -n -Pn -sSU -pT:0-65535,U:0-65535 -v -A -oX results.xt "$1"
+}
+
+# Tar compress with progress bar
+tbar() {
+	local tar=$1
+	local dir=$2
+	tar -cvzf "$tar" "$dir" | tqdm --unit_scale --total "$(find "$dir" -type f | wc -l )" > /dev/null
+}
+
 # Update kops
 kopsupdate() {
 	if [[ "$OSTYPE" == darwin* ]]; then
