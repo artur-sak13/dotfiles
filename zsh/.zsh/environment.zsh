@@ -5,7 +5,7 @@
 export ZSH="${HOME}/.oh-my-zsh"
 export ZSH_THEME="lambda-pure"
 export ZSH_COMPDUMP="${ZDOTDIR:-$HOME}/.zcompdump"
-export ENABLE_CORRECTION=true
+export ENABLE_CORRECTION=false
 # Turn off insecure completion dir
 export ZSH_DISABLE_COMPFIX=true
 
