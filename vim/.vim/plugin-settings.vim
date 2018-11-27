@@ -74,8 +74,8 @@ let g:gundo_close_on_revert = 1
 
 " Deoplete
 if has('nvim')
-  let g:python_host_prog = '/usr/local/bin/python2'
-  let g:python3_host_prog = '/usr/local/bin/python3'
+  let g:python_host_prog = '/usr/bin/python2'
+  let g:python3_host_prog = '/usr/bin/python3'
   let g:deoplete#enable_ignore_case = 1
   let g:deoplete#enable_at_startup = 1
   let g:deoplete#ignore_sources = {}

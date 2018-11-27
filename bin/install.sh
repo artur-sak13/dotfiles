@@ -124,6 +124,8 @@ base_min() {
 		net-tools \
 		neovim \
 		pkg-config \
+        python-pip \
+        python-setuptools \
 		python3 \
 		python3-pip \
 		python3-setuptools \

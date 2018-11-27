@@ -1,0 +1,132 @@
+#!/bin/bash
+#
+# Original script by Jess Frazelle
+# With modifications by Artur Sak
+#
+
+set -e
+
+help() {
+    echo "htotheizzo - a simple script to update docker and apt packages"
+}
+
+dcleanup() {
+    local containers
+    mapfile -t containers < <(docker ps --filter status=exited -q 2>/dev/null)
+    
+    docker rm "${containers[@]}" 2>/dev/null
+    local images
+    
+    mapfile -t images < <(docker images --filter dangling=true -q 2>/dev/null)
+    docker rmi "${images[@]}" 2>/dev/null
+}
+
+update_docker() {
+    dcleanup || true
+    systemctl stop docker || true
+    echo "Here"
+    local tmp_tar=/tmp/docker.tgz
+    local binary_uri="https://download.docker.com/linux/static/edge/x86_64"
+    
+    local docker_version
+    
+    docker_version=$(curl -sSL "https://api.github.com/repos/docker/docker-ce/releases/latest" | jq --raw-output .tag_name)
+    docker_version=${docker_version#v}
+
+    (
+    set -x
+    curl -fSL "${binary_uri}/docker-${docker_version}.tgz" -o "$tmp_tar"
+    tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
+    
+    rm "${tmp_tar}"
+    rm -f /usr/local/bin/ctr
+    rm -f /usr/local/bin/containerd
+    rm -f /usr/local/bin/containerd-shim
+    docker -v
+    )
+    
+    chmod +x /usr/local/bin/docker*
+    
+    systemctl daemon-reload
+    systemctl enable docker
+    systemctl start docker
+}
+
+update_containerd() {
+    local tmp_tar=/tmp/containerd.tar.gz
+    local containerd_version
+    
+    containerd_version=$(curl -sSL "https://api.github.com/repos/containerd/containerd/releases" | jq --raw-output '.[0].tag_name')
+    containerd_version=${containerd_version#v}
+    
+    local binary_uri="https://github.com/containerd/containerd/releases/download/v${containerd_version}/containerd-${containerd_version}.linux-amd64.tar.gz"
+    (
+    set -x
+    curl -fSL "$binary_uri" -o "$tmp_tar"
+    tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
+    rm "$tmp_tar"
+    containerd -v
+    )
+    
+    systemctl daemon-reload
+    systemctl enable containerd
+    systemctl start containerd
+}
+update_packer() {
+    local tmp_zip=/tmp/packer.zip
+    local packer_version
+    
+    packer_version=$(curl -sSL "https://checkpoint-api.hashicorp.com/v1/check/packer" | jq -r '.current_version')
+    
+    local binary_uri="https://releases.hashicorp.com/packer/${packer_version}/packer_${packer_version}_linux_amd64.zip"
+    (
+    set -x
+    curl -fSL "$binary_uri" -o "$tmp_zip"
+    unzip -o "$tmp_zip" -d /usr/local/bin
+    rm "$tmp_zip"
+    packer -v
+    )
+}
+
+update_apt() {
+    apt -y update
+    apt -y upgrade
+    apt -y autoremove
+    apt -y autoclean
+    apt -y clean
+    rm -rf /var/lib/apt/lists/*
+}
+
+update() {
+    echo "htotheizzo is running the update functions"
+
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+        echo "Hey there Linux user. You rule."
+
+        if [ "$UID" -ne 0 ]; then
+            echo "Please run as root"
+            exit 1
+        fi
+
+        update_apt;
+        update_docker;
+        update_containerd; 
+        update_packer;
+    else
+        echo "We don't have update functions for OS: ${OSTYPE}"
+        echo "Moving on..."
+    fi
+    
+    echo "htotheizzo is complete, you got 99 problems but updates ain't one"
+}
+
+main() {
+    local arg=$1
+    if [[ ! -z "$arg" ]]; then
+        help
+    else
+        update
+    fi
+}
+
+main "$@"

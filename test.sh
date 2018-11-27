@@ -15,7 +15,7 @@ for f in $(find . -type f -not -iwholename '*.git*' -not -iwholename '*.vim*' | 
   fi
 done
 
-for f in $(find . -name '*.vim' ! -name '.vim'  ! -path '*autoload*' ! -path '*plugged*' ! -path '*.config*' | sort -u); do
+for f in $(find . -name '*.vim' ! -name '.vim' ! -path '*undo*' ! -path '*autoload*' ! -path '*plugged*' ! -path '*.config*' | sort -u); do
   {
     vint "$f" && echo -e "\\033[32m[OK]\\033[0m: sucessfully linted vim script $f"
   } || {
