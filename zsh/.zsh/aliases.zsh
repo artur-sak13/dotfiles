@@ -43,6 +43,7 @@ alias httpdump="sudo tcpdump -i en0 -n -s 0 -w - | grep -a -o -E \"Host\\: .*|GE
 
 alias vim="nvim"
 alias config="code ~/.dotfiles/zsh/"
+alias dots='code ${DOTFILES}'
 
 alias untar='tar -xvf'
 alias hieroglyph="echo -e \"\\033(0\""

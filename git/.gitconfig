@@ -22,60 +22,63 @@
 	# Show verbose output about tags branches or remotes
 	tags = tag -l
 	branches = branch -a
-    remotes = remote -v
-    stashes = stash list
+	remotes = remote -v
+	stashes = stash list
 
-    # Add all untracked files to .gitignore
-    ignore = "!git status | grep -P \"^\\t\" | grep -vF .gitignore | sed \"s/^\\t//\" >> .gitignore"
-    
-    # From trevor bramble https://twitter.com/TrevorBramble/status/774292970681937920
-    alias=!git config -l | grep ^alias | cut -c 7- | sort
+	# Add all untracked files to .gitignore
+	ignore = "!git status | grep -P \"^\\t\" | grep -vF .gitignore | sed \"s/^\\t//\" >> .gitignore"
+	
+	# From trevor bramble https://twitter.com/TrevorBramble/status/774292970681937920
+	alias=!git config -l | grep ^alias | cut -c 7- | sort
 
-    # From https://github.com/GitAlias/gitalias
-    add-alias = "!f() { [ $# = 3 ] && git config $1 alias.\"$2\" \"$3\" && return 0 || echo \"Usage: git add-(local|global)-alias <new alias> <original command>\" >&2 && return 1; }; f"
-    add-global-alias = "!git add-alias --global"
-    add-local-alias = "!git add-alias --local"
+	# From https://github.com/GitAlias/gitalias
+	add-alias = "!f() { [ $# = 3 ] && git config $1 alias.\"$2\" \"$3\" && return 0 || echo \"Usage: git add-(local|global)-alias <new alias> <original command>\" >&2 && return 1; }; f"
+	add-global-alias = "!git add-alias --global"
+	add-local-alias = "!git add-alias --local"
 
-    uncommit = reset --soft HEAD~1
-    unadd = reset HEAD
+	uncommit = reset --soft HEAD~1
+	unadd = reset HEAD
 
-    # Track all remote branches that aren't already being tracked
-    track-all-remote-branches = !"f() { git branch -r | grep -v ' -> ' | sed 's/^\\+origin\\///' ; }; f"
+	# Track all remote branches that aren't already being tracked
+	track-all-remote-branches = !"f() { git branch -r | grep -v ' -> ' | sed 's/^\\+origin\\///' ; }; f"
 
-    # Discard changes in a (list of) file(s) in the working tree
-    discard = checkout --
+	# Discard changes in a (list of) file(s) in the working tree
+	discard = checkout --
 
-    # Clean and discard changes and untracked files in working tree
-    cleanout = !git clean -df && git checkout -- .
+	# Clean and discard changes and untracked files in working tree
+	cleanout = !git clean -df && git checkout -- .
 
-    ours = !"f() { git checkout --ours $@ && git add $@; }; f"
-    theirs = !"f() { git checkout --theirs $@ && git add $@; }; f"
+	# Blow away all local changes
+	reset-to-pristine = !git reset --hard && git clean -ffdx
 
-    save = stash push
-    pop = stash pop
+	ours = !"f() { git checkout --ours $@ && git add $@; }; f"
+	theirs = !"f() { git checkout --theirs $@ && git add $@; }; f"
 
-    push-to-all-remotes = !git retmote | xargs -I% -n1 git push %
+	save = stash push
+	pop = stash pop
 
-    # CVS Aliases
-    cvs-i = cvsimport -k -a
-    cvs-e = cvsexportcommit -u -p
+	push-to-all-remotes = !git retmote | xargs -I% -n1 git push %
 
-    # Delete all branches that have been merged into the master branch
-    master-cleanse = !git master-cleanse-local; git master-cleanse-remote
+	# CVS Aliases
+	cvs-i = cvsimport -k -a
+	cvs-e = cvsexportcommit -u -p
 
-    # Delete all local branches that have been merged into the local master branch
-    master-cleanse-local = "!git checkout master && git branch --merged | xargs git branch --delete"
+	# Delete all branches that have been merged into the master branch
+	master-cleanse = !git master-cleanse-local; git master-cleanse-remote
 
-    # Delete all remote branches that have been merged into the remote master branch
-    master-cleanse-remote = !"git branch --remotes --merged origin/master | sed 's# *origin/##' | grep -v '^master$' xargs -I% git push origin :% 2>&1 | grep --colour=never 'deleted'"
+	# Delete all local branches that have been merged into the local master branch
+	master-cleanse-local = "!git checkout master && git branch --merged | xargs git branch --delete"
 
-     # Expunge a file everywhere; this command is typically for a serious problem, 
-     # such as accidentially committing a file of sensistive data, such as passwords.
-     # After you use command, you will likely need to force push everything.
-     # See https://help.github.com/articles/removing-sensitive-data-from-a-repository/
-    expunge = !"f() { git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch $1\" --prune-empty --tag-name-filter cat -- --all }; f"
+	# Delete all remote branches that have been merged into the remote master branch
+	master-cleanse-remote = !"git branch --remotes --merged origin/master | sed 's# *origin/##' | grep -v '^master$' xargs -I% git push origin :% 2>&1 | grep --colour=never 'deleted'"
 
-    snapshot = !git stash push "snapshot: $(date)" && git stash apply "stash@{0}"
+		# Expunge a file everywhere; this command is typically for a serious problem, 
+		# such as accidentially committing a file of sensistive data, such as passwords.
+		# After you use command, you will likely need to force push everything.
+		# See https://help.github.com/articles/removing-sensitive-data-from-a-repository/
+	expunge = !"f() { git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch $1\" --prune-empty --tag-name-filter cat -- --all }; f"
+
+	snapshot = !git stash push "snapshot: $(date)" && git stash apply "stash@{0}"
 
 	# List contributors with number of commits
 	contributors = shortlog --summary --numbered

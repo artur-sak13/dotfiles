@@ -8,7 +8,6 @@
 plugins=(
 	hacker-quotes
 	base16-shell
-	you-should-use
 	zsh-autosuggestions
 	fast-syntax-highlighting
 	)

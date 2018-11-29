@@ -40,6 +40,7 @@ manpath=(
 	"${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnuman"
 	"${HOMEBREW_PREFIX}/opt/findutils/libexec/gnuman"
 	"${HOMEBREW_PREFIX}/opt/make/libexec/gnuman"
+	"${HOMEBREW_PREFIX}/opt/grep/libexec/gnuman"
 	"${MANPATH}"
 	)
 

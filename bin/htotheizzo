@@ -38,7 +38,7 @@ update_docker() {
     curl -fSL "${binary_uri}/docker-${docker_version}.tgz" -o "$tmp_tar"
     tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
     
-    rm "${tmp_tar}"
+    rm -f "${tmp_tar}"
     rm -f /usr/local/bin/ctr
     rm -f /usr/local/bin/containerd
     rm -f /usr/local/bin/containerd-shim
@@ -64,7 +64,7 @@ update_containerd() {
     set -x
     curl -fSL "$binary_uri" -o "$tmp_tar"
     tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
-    rm "$tmp_tar"
+    rm -f "$tmp_tar"
     containerd -v
     )
     
@@ -83,7 +83,7 @@ update_packer() {
     set -x
     curl -fSL "$binary_uri" -o "$tmp_zip"
     unzip -o "$tmp_zip" -d /usr/local/bin
-    rm "$tmp_zip"
+    rm -f "$tmp_zip"
     packer -v
     )
 }
