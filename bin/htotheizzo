@@ -72,19 +72,18 @@ update_containerd() {
     systemctl enable containerd
     systemctl start containerd
 }
-update_packer() {
-    local tmp_zip=/tmp/packer.zip
-    local packer_version
-    
-    packer_version=$(curl -sSL "https://checkpoint-api.hashicorp.com/v1/check/packer" | jq -r '.current_version')
-    
-    local binary_uri="https://releases.hashicorp.com/packer/${packer_version}/packer_${packer_version}_linux_amd64.zip"
+update_tool() {
+    local tmp_zip="/tmp/${1}.zip"
+    local tool_version
+
+    tool_version=$(curl -sSL "https://checkpoint-api.hashicorp.com/v1/check/${1}" | jq -r '.current_version')
+
+    local binary_uri="https://releases.hashicorp.com/${1}/${tool_version}/${1}_${tool_version}_linux_amd64.zip"
     (
-    set -x
-    curl -fSL "$binary_uri" -o "$tmp_zip"
-    unzip -o "$tmp_zip" -d /usr/local/bin
-    rm -f "$tmp_zip"
-    packer -v
+        set -x
+        curl -fSL "$binary_uri" -o "$tmp_zip"
+        unzip -o "$tmp_zip" -d /usr/local/bin
+        rm -f "$tmp_zip"
     )
 }
 
@@ -111,7 +110,8 @@ update() {
         update_apt;
         update_docker;
         update_containerd; 
-        update_packer;
+        update_tool "packer";
+        update_tool "terraform";
     else
         echo "We don't have update functions for OS: ${OSTYPE}"
         echo "Moving on..."
