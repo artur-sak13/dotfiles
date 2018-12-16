@@ -13,18 +13,18 @@ for dir in "${dirs[@]}"; do
     if git status --porcelain -b | grep '^## [^ ]\+ .*behind' &> /dev/null; then
       echo "Updating repo for ${base}..."
       echo
-      
+
       if git diff --quiet --ignore-submodules --cached; then
         git stash push
       fi
-      
+
       git pull origin master;
       git submodule foreach git pull origin master;
 
       if git rev-parse --verify refs/stash &>/dev/null; then
         git stash pop && git stash clear
       fi
-    
+
       echo
       echo "Sucessfully updated ${base}!"
       echo

@@ -2,7 +2,7 @@
 set -e
 set -o pipefail
 
-export DEBIAN_FRONTEND=noninteractive 
+export DEBIAN_FRONTEND=noninteractive
 
 get_user() {
 	if [ -z "${TARGET_USER-}" ]; then
@@ -124,8 +124,8 @@ base_min() {
 		net-tools \
 		neovim \
 		pkg-config \
-        python-pip \
-        python-setuptools \
+		python-pip \
+		python-setuptools \
 		python3 \
 		python3-pip \
 		python3-setuptools \
@@ -172,7 +172,7 @@ base() {
 		xclip \
 		xcompmgr \
 		--no-install-recommends
-	
+
 	setup_sudo
 
 	apt autoremove
@@ -203,7 +203,7 @@ setup_sudo() {
 install_oh_my_zsh(){
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
     local user="$USER"
-    chsh -s /bin/zsh "${user}" 
+    chsh -s /bin/zsh "${user}"
 }
 
 install_homebrew() {
@@ -213,17 +213,17 @@ install_homebrew() {
 
 install_tmux() {
 	(
-	if [[ ! -d "${HOME}/tmux" ]]; then
-		git clone https://github.com/tmux/tmux.git "${HOME}/tmux"
-	fi
-	
-	cd "${HOME}/tmux"
-	
-	sh autogen.sh
-	
-	./configure && make
-	
-	sudo mv tmux /usr/local/bin
+		if [[ ! -d "${HOME}/tmux" ]]; then
+			git clone https://github.com/tmux/tmux.git "${HOME}/tmux"
+		fi
+
+		cd "${HOME}/tmux"
+
+		sh autogen.sh
+
+		./configure && make
+
+		sudo mv tmux /usr/local/bin
 	)
 }
 
@@ -244,7 +244,7 @@ install_golang() {
 	if [[ -d "$GO_SRC" ]]; then
 		sudo rm -rf "$GO_SRC"
 	fi
-	
+
 	GO_VERSION=${GO_VERSION#go}
 
 	(
