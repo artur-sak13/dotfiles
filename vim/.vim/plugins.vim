@@ -56,6 +56,9 @@ Plug 'itchyny/lightline.vim'            "Minimal statusline
 Plug 'luochen1990/rainbow'              "Color codes matching parenthesis and other surroundings
 Plug 'lilydjwg/colorizer'               "Colorize all text denoting rgb/rgba colors
 
+" Go
+Plug 'fatih/vim-go'                     "Go language support for vim
+
 " Terraform
 Plug 'hashivim/vim-terraform'
 Plug 'vim-syntastic/syntastic'

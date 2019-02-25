@@ -131,7 +131,7 @@ set splitbelow
 " When vimrc is edited, reload it
 augroup cfg
     au!
-    au! BufWritePost $VIMRC source %
+    au BufWritePost $MYVIMRC source $MYVIMRC
 augroup END
 
 " Set default shell
@@ -165,4 +165,4 @@ set nocursorline
 
 syntax sync minlines=256
 set synmaxcol=300
-set re=1
+set regexpengine=1

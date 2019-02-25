@@ -40,6 +40,12 @@ set number
 " Fix TERM
 set t_Co=256
 
+"if (&term == "pcterm" || &term == "win32")
+"	set term=xterm
+"	set termencoding=utf8
+"	set nocompatible
+" endif
+
 " 256 colorspace
 let base16colorspace=256  
 
