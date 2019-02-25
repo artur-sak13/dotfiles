@@ -47,6 +47,7 @@ Plug 'airblade/vim-gitgutter'           "Asynchronously displays a git diff in t
 Plug 'Xuyuanp/nerdtree-git-plugin'      "Show git repo status on NERDTree
 
 Plug 'sheerun/vim-polyglot'             "A collection of language packs for Vim
+Plug 'fatih/vim-go'                     "Go language support
 
 " Themes
 Plug 'itchyny/lightline.vim'            "Minimal statusline

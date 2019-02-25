@@ -8,46 +8,7 @@ brewup() {
 	brew update
 	brew upgrade
 	brew cleanup -s
-	brew prune
 	brew cask upgrade
-}
-
-# Update ruby gems
-gemup() {
-	gem update --system
-	gem update
-	gem cleanup
-}
-
-# Update node.js
-nodeup() {
-	version=$(nvm version node)
-	# shellcheck source=/dev/null
-	(
-  	cd "${NVM_DIR}"
-  	git fetch --tags origin
-  	git checkout "$(git describe --abbrev=0 --tags --match 'v[0-9]*')" "$(git rev-list --tags --max-count=1)"
-	) && \. "${NVM_DIR}/nvm.sh"
-
-	nvm install node --reinstall-packages-from=node
-	nvm uninstall "${version}"
-	nvm clear-cache
-}
-
-# Update python packages
-pyup() {
-	pip2 install --user --upgrade pip
-	pip2 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install --user --upgrade
-	pip3 install --user --upgrade pip
-	pip3 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install --user --upgrade
-}
-
-# Update all the things!
-update() {
-	brewup
-	gemup
-	pyup
-	rustup update
 }
 
 kalloc() {
@@ -224,7 +185,7 @@ helmdel() {
 }
 # Create new repository in gitlab from the command line
 gitnew() {
-	git push --set-upstream git@gitlab.twopoint.io:artur.sak/"$(git rev-parse --show-toplevel | xargs basename).git" "$(git rev-parse --abbrev-ref HEAD)"
+	git push --set-upstream git@github.com:artur-sak13/"$(git rev-parse --show-toplevel | xargs basename).git" "$(git rev-parse --abbrev-ref HEAD)"
 }
 
 # Port forward weave scope pod
@@ -260,21 +221,6 @@ tbar() {
 	tar -cvzf "$tar" "$dir" | tqdm --unit_scale --total "$(find "$dir" -type f | wc -l )" > /dev/null
 }
 
-# Update kops
-kopsupdate() {
-	if [[ "$OSTYPE" == darwin* ]]; then
-		brew update && brew upgrade kops
-	else
-		if [ "$UID" -ne 0 ]; then
-			echo "Please run as root"
-			exit 1
-		fi
-		curl -LO https://github.com/kubernetes/kops/releases/download/"$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64"
-		chmod +x kops-linux-amd64
-		mv kops-linux-amd64 /usr/local/bin/kops
-	fi
-}
-
 restart_gpgagent() {
 	# shellcheck disable=SC2046
 	kill -9 $(pidof scdaemon) >/dev/null 2>&1
@@ -282,21 +228,4 @@ restart_gpgagent() {
 	kill -9 $(pidof gpg-agent) >/dev/null 2>&1
 	gpg-connect-agent /bye >/dev/null 2>&1
 	gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
-}
-
-# Update kubectl
-kubectlupdate() {
-	if [[ "$OSTYPE" == darwin* ]]; then
-		brew update && brew upgrade kubernetes-cli
-	else
-		if [ "$UID" -ne 0 ]; then
-			echo "Please run as root"
-			exit 1
-		fi
-
-		KUBERNETES_VERSION=$(curl -sSL https://storage.googleapis.com/kubernetes-release/release/stable.txt)
-		curl -sSL "https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl" > /usr/local/bin/kubectl
-		chmod +x /usr/local/bin/kubectl
-		echo "kubectl $(kubectl version --client --short)"
-	fi
 }

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ##############################################################################
 # generate-go-project-files
 # -----------
@@ -17,7 +17,7 @@ set -o pipefail
 
 OWNER=${OWNER:-Two Point Inc.}
 
-BASE_PROJECT=${BASE_PROJECT:-genuinetools/pkg}
+BASE_PROJECT=${BASE_PROJECT:-genuinetools/pepper}
 BASE_PROJECT_NAME="$(basename "$BASE_PROJECT")"
 BASE_PROJECT_DIR="$(dirname "$BASE_PROJECT")"
 

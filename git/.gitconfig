@@ -112,7 +112,11 @@
 [difftool]
     prompt = false
 [help]
-	autocorrect = 1
+    autocorrect = 1
+[rerere]
+    enabled = 1
+[rebase]
+    autosquash = true
 [merge]
 	tool = vimdiff3
 	conflictstyle = diff3

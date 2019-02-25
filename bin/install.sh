@@ -201,13 +201,13 @@ setup_sudo() {
 }
 
 install_oh_my_zsh(){
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
-    local user="$USER"
-    chsh -s /bin/zsh "${user}"
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+	local user="$USER"
+	chsh -s /bin/zsh "${user}"
 }
 
 install_homebrew() {
-  /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
 }
 
@@ -237,7 +237,7 @@ install_golang() {
 	GO_VERSION=$(curl -sSL "https://golang.org/VERSION?m=text")
 	export GO_SRC=/usr/local/go
 
-	if [[ ! -z "$1" ]]; then
+	if [[ -n "$1" ]]; then
 		GO_VERSION=$1
 	fi
 
@@ -276,24 +276,24 @@ install_golang() {
 get_dotfiles() {
 	# create subshell
 	(
-	cd "$HOME"
+		cd "$HOME"
 
-	if [[ ! -d "${HOME}/dotfiles" ]]; then
-		# install dotfiles from repo
-		git clone git@github.com:artur-sak13/dotfiles.git "${HOME}/dotfiles"
-	fi
+		if [[ ! -d "${HOME}/dotfiles" ]]; then
+			# install dotfiles from repo
+			git clone git@github.com:artur-sak13/dotfiles.git "${HOME}/dotfiles"
+		fi
 
-	cd "${HOME}/dotfiles"
+		cd "${HOME}/dotfiles"
 
-	# installs all the things
-	make
+		# installs all the things
+		make
 
-	if [[ "$OSTYPE" != darwin* ]]; then
-		sudo systemctl enable systemd-networkd systemd-resolved
-		sudo systemctl start systemd-networkd systemd-resolved
-	fi
+		if [[ "$OSTYPE" != darwin* ]]; then
+			sudo systemctl enable systemd-networkd systemd-resolved
+			sudo systemctl start systemd-networkd systemd-resolved
+		fi
 
-	cd "$HOME"
+		cd "$HOME"
 	)
 }
 

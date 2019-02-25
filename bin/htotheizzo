@@ -7,7 +7,7 @@
 set -e
 
 help() {
-    echo "htotheizzo - a simple script to update docker and apt packages"
+    echo "htotheizzo - a simple script to update homebrew or apt, gems, pip, and node packages"
 }
 
 dcleanup() {
@@ -34,15 +34,15 @@ update_docker() {
     docker_version=${docker_version#v}
 
     (
-    set -x
-    curl -fSL "${binary_uri}/docker-${docker_version}.tgz" -o "$tmp_tar"
-    tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
-    
-    rm -f "${tmp_tar}"
-    rm -f /usr/local/bin/ctr
-    rm -f /usr/local/bin/containerd
-    rm -f /usr/local/bin/containerd-shim
-    docker -v
+        set -x
+        curl -fSL "${binary_uri}/docker-${docker_version}.tgz" -o "$tmp_tar"
+        tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
+        
+        rm -f "${tmp_tar}"
+        rm -f /usr/local/bin/ctr
+        rm -f /usr/local/bin/containerd
+        rm -f /usr/local/bin/containerd-shim
+        docker -v
     )
     
     chmod +x /usr/local/bin/docker*
@@ -61,17 +61,22 @@ update_containerd() {
     
     local binary_uri="https://github.com/containerd/containerd/releases/download/v${containerd_version}/containerd-${containerd_version}.linux-amd64.tar.gz"
     (
-    set -x
-    curl -fSL "$binary_uri" -o "$tmp_tar"
-    tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
-    rm -f "$tmp_tar"
-    containerd -v
+        set -x
+        curl -fSL "$binary_uri" -o "$tmp_tar"
+        tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
+        rm -f "$tmp_tar"
+        containerd -v
     )
     
     systemctl daemon-reload
     systemctl enable containerd
     systemctl start containerd
 }
+
+update_rust() {
+    rustup update
+}
+
 update_tool() {
     local tmp_zip="/tmp/${1}.zip"
     local tool_version
@@ -96,6 +101,58 @@ update_apt() {
     rm -rf /var/lib/apt/lists/*
 }
 
+update_brews() {
+    brew update
+	brew upgrade
+	brew cleanup -s
+	brew cask upgrade
+}
+
+# Update ruby gems
+update_gems() {
+    gem update --system
+	gem update
+	gem cleanup
+}
+
+# Update node and npm packages
+update_node() {
+    version=$(nvm version node)
+	# shellcheck source=/dev/null
+	(
+  	cd "${NVM_DIR}"
+  	git fetch --tags origin
+  	git checkout "$(git describe --abbrev=0 --tags --match 'v[0-9]*')" "$(git rev-list --tags --max-count=1)"
+	) && \. "${NVM_DIR}/nvm.sh"
+
+	nvm install node --reinstall-packages-from=node
+	nvm uninstall "${version}"
+	nvm clear-cache
+}
+
+# Update pip packages
+update_python() {
+    pip2 install --user --upgrade pip
+	pip2 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install --user --upgrade
+	pip3 install --user --upgrade pip
+	pip3 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install --user --upgrade
+}
+
+# Update kubectl
+update_kubectl() {
+    KUBERNETES_VERSION=$(curl -sSL https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+    curl -sSL "https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl" > /usr/local/bin/kubectl
+    chmod +x /usr/local/bin/kubectl
+    echo "kubectl $(kubectl version --client --short)"
+}
+
+# Update kops
+update_kops() {
+    curl -LO https://github.com/kubernetes/kops/releases/download/"$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64"
+    chmod +x kops-linux-amd64
+    mv kops-linux-amd64 /usr/local/bin/kops
+}
+
 update() {
     echo "htotheizzo is running the update functions"
 
@@ -112,6 +169,14 @@ update() {
         update_containerd; 
         update_tool "packer";
         update_tool "terraform";
+        update_kubectl;
+        update_kops;
+    elif [[ "$OSTYPE" == darwin* ]]; then
+        update_brews;
+        update_gems;
+        update_python;
+        update_node;
+        update_rust;
     else
         echo "We don't have update functions for OS: ${OSTYPE}"
         echo "Moving on..."
@@ -122,7 +187,7 @@ update() {
 
 main() {
     local arg=$1
-    if [[ ! -z "$arg" ]]; then
+    if [[ -n "$arg" ]]; then
         help
     else
         update

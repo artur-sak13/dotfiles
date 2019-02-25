@@ -23,15 +23,15 @@ if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
 fi
 
 # shellcheck source=/dev/null
-if [ -f "${HOME}/.nvm/nvm.sh" ]; then source "${HOME}/.nvm/nvm.sh"; fi
+if [ -f "${HOME}/.nvm/nvm.sh" ]; then . "${HOME}/.nvm/nvm.sh"; fi
 # shellcheck source=/dev/null
-if [ -f "${HOME}/.iterm2_shell_integration.zsh" ]; then source "${HOME}/.iterm2_shell_integration.zsh"; fi
+if [ -f "${HOME}/.iterm2_shell_integration.zsh" ]; then . "${HOME}/.iterm2_shell_integration.zsh"; fi
 # shellcheck source=/dev/null
-if [ -f "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc" ]; then source "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"; fi
+if [ -f "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc" ]; then . "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"; fi
 # shellcheck source=/dev/null
-if [ -f "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc" ]; then source "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"; fi
+if [ -f "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc" ]; then . "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"; fi
 #shellcheck source=/dev/null
-if [ -f "${HOME}/.travis/travis.sh" ]; then source "${HOME}/.travis/travis.sh"; fi
+if [ -f "${HOME}/.travis/travis.sh" ]; then . "${HOME}/.travis/travis.sh"; fi
 
 # shellcheck source=/dev/null
 source <(kops completion zsh)
@@ -40,6 +40,8 @@ source <(kubectl completion zsh)
 
 # shellcheck source=/dev/null
 if hash helm 2>/dev/null; then source <(helm completion zsh); fi
+# shellcheck source=/dev/null
+if hash jx 2>/dev/null; then source <(jx completion zsh); fi 
 
 if hash pyenv 2>/dev/null; then eval "$(pyenv init -)"; fi
 if hash pyenv 2>/dev/null; then eval "$(pyenv virtualenv-init -)"; fi

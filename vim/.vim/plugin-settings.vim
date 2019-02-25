@@ -27,7 +27,6 @@ let g:delimitMate_smart_quotes = 1
 let g:delimitMate_expand_inside_quotes = 0
 let g:delimitMate_jump_expansion = 1
 let g:delimitMate_smart_matchpairs = '^\%(\w\|\$\)'
-" let g:delimitMate_matchpairs = "(:),[:],{:}"
 
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
@@ -39,9 +38,6 @@ let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 
 let g:syntastic_aggregate_errors = 1
-
-let g:terraform_completion_keys = 1
-let g:terraform_registry_module_completion = 1
 
 " Neomake
 call neomake#configure#automake('nrwi', 500)
@@ -88,7 +84,6 @@ if has('nvim')
   let g:deoplete#ignore_sources._ = ['buffer', 'member', 'tag', 'file', 'neosnippet']
   let g:deoplete#sources#go#sort_class = ['func', 'type', 'var', 'const']
   let g:deoplete#sources#go#align_class = 1
-  " let g:deoplete#omni_patterns.terraform = '[^ *\t"{=$]\w*'
 
   call deoplete#custom#source('_', 'matchers', ['matcher_fuzzy'])
   call deoplete#custom#source('_', 'converters', ['converter_remove_paren'])
@@ -113,6 +108,20 @@ if has('gui_running')
     set regexpengine=1
     syntax enable
 endif
+
+" Vim-Go
+let g:go_fmt_fail_silently = 0
+let g:go_fmt_command = 'goimports'
+let g:go_autodetect_gopath = 1
+let g:go_term_enabled = 1
+let g:go_snippet_engine = 'neosnippet'
+let g:go_highlight_space_tab_error = 0
+let g:go_highlight_array_whitespace_error = 0
+let g:go_highlight_trailing_whitespace_error = 0
+let g:go_highlight_extra_types = 0
+let g:go_highlight_operators = 0
+let g:go_highlight_build_constraints = 1
+let g:go_fmt_autosave = 1
 
 let b:vcm_tab_complete = 'omni'
 set omnifunc=syntaxcomplete#Complete
@@ -162,3 +171,8 @@ let g:rainbow_active = 1
 
 " Vim-autoformat
 noremap <F5> :Autoformat<CR>
+
+" Terraform
+let g:terraform_completion_keys = 1
+let g:terraform_fmt_on_save = 1
+let g:terraform_registry_module_completion = 1

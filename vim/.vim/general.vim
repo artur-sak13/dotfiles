@@ -28,16 +28,15 @@ set wildmenu
 set wildignorecase
 
 " Ignore files vim doesn't use
-set wildignore+=.git,.hg,.svn
-set wildignore+=*.aux,*.out,*.toc
-set wildignore+=*.o,*.obj,*.exe,*.dll,*.manifest,*.rbc,*.class,*.pyc
-set wildignore+=*.ai,*.bmp,*.gif,*.ico,*.jpg,*.jpeg,*.png,*.psd,*.webp
-set wildignore+=*.avi,*.divx,*.mp4,*.webm,*.mov,*.m2ts,*.mkv,*.vob,*.mpg,*.mpeg
-set wildignore+=*.mp3,*.oga,*.ogg,*.wav,*.flac
-set wildignore+=*.eot,*.otf,*.ttf,*.woff
-set wildignore+=*.doc,*.pdf,*.cbr,*.cbz
-set wildignore+=*.zip,*.tar.gz,*.tar.bz2,*.rar,*.tar.xz,*.kgb
-set wildignore+=*.swp,.lock,.DS_Store,._*,*~
+set wildignore+=.git,.hg,.svn                                                   " Version control
+set wildignore+=*.aux,*.out,*.toc                                               " LaTeX intermediate files
+set wildignore+=*.o,*.obj,*.exe,*.dll,*.manifest,*.rbc,*.class,*.pyc            " Byte code and compiled object files
+set wildignore+=*.ai,*.bmp,*.gif,*.ico,*.jpg,*.jpeg,*.png,*.psd,*.webp          " Binary images
+set wildignore+=*.avi,*.divx,*.mp4,*.webm,*.mov,*.m2ts,*.mkv,*.vob,*.mpg,*.mpeg " Multimedia files
+set wildignore+=*.mp3,*.oga,*.ogg,*.wav,*.flac                                  " Audio files
+set wildignore+=*.eot,*.otf,*.ttf,*.woff                                        " Fonts
+set wildignore+=*.doc,*.pdf,*.cbr,*.cbz                                         " Document files
+set wildignore+=*.swp,.lock,.DS_Store,._*,*~                                    " Misc files
 
 " Set how many lines of history VIM has to remember
 set history=700
