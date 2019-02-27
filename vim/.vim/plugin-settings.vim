@@ -110,6 +110,7 @@ if has('gui_running')
 endif
 
 " Vim-Go
+let g:ctrlp_buftag_types = {'go' : '--language-force=go --golang-types=ftv'}
 let g:go_fmt_fail_silently = 0
 let g:go_fmt_command = 'goimports'
 let g:go_autodetect_gopath = 1
@@ -129,22 +130,6 @@ set omnifunc=syntaxcomplete#Complete
 augroup moved
     au CursorMovedI,InsertLeave * if pumvisible() == 0|silent! pclose|endif
 augroup END
-
-au BufNewFile,BufRead *.go setlocal noet ts=4 sw=4 sts=4
-
-let g:ctrlp_buftag_types = {'go' : '--language-force=go --golang-types=ftv'}
-let g:go_fmt_fail_silently = 0
-let g:go_fmt_command = "goimports"
-let g:go_autodetect_gopath = 1
-let g:go_term_enabled = 1
-let g:go_snippet_engine = "neosnippet"
-let g:go_highlight_space_tab_error = 0
-let g:go_highlight_array_whitespace_error = 0
-let g:go_highlight_trailing_whitespace_error = 0
-let g:go_highlight_extra_types = 0
-let g:go_highlight_operators = 0
-let g:go_highlight_build_constraints = 1
-let g:go_fmt_autosave = 1
 
 set completeopt=menuone,menu,longest,preview
 
