@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ###############################################################
 # => Environment
 ###############################################################
@@ -17,6 +17,11 @@ export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 export RBENV_ROOT="${HOME}/.rbenv"
 
 export NVM_DIR="${HOME}/.nvm"
+
+# shellcheck disable=SC1091
+[ -s "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"
+# shellcheck disable=SC1091
+[ -s "/usr/local/opt/nvm/etc/bash_completion" ] && . "/usr/local/opt/nvm/etc/bash_completion"
 
 export HOMEBREW_PREFIX="/usr/local"
 export EDITOR="${HOMEBREW_PREFIX}/bin/nvim"

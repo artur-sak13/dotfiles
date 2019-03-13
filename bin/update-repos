@@ -5,29 +5,30 @@ set -o pipefail
 mapfile -t dirs < <(find "${HOME}/work" "${HOME}/projects" -maxdepth 2 -type d -name ".git" ! -path "${HOME}/work" ! -path "${HOME}/projects")
 
 for dir in "${dirs[@]}"; do
-  dir=$(dirname "$dir")
-  base=$(basename "$dir")
-
-  (
-    cd "$dir"
-    if git status --porcelain -b | grep '^## [^ ]\+ .*behind' &> /dev/null; then
-      echo "Updating repo for ${base}..."
-      echo
-
-      if git diff --quiet --ignore-submodules --cached; then
-        git stash push
-      fi
-
-      git pull origin master;
-      git submodule foreach git pull origin master;
-
-      if git rev-parse --verify refs/stash &>/dev/null; then
-        git stash pop && git stash clear
-      fi
-
-      echo
-      echo "Sucessfully updated ${base}!"
-      echo
-    fi
-  )
+    dir=$(dirname "$dir")
+    base=$(basename "$dir")
+    
+    (
+        cd "$dir"
+        
+        if git status --porcelain -b | grep '^## [^ ]\+ .*behind' &> /dev/null; then
+            echo "Updating repo for ${base}..."
+            echo
+            
+            if git diff --quiet --ignore-submodules --cached; then
+                git stash push
+            fi
+            
+            git pull origin master;
+            git submodule foreach git pull origin master;
+            
+            if git rev-parse --verify refs/stash &>/dev/null; then
+                git stash pop && git stash clear
+            fi
+            
+            echo
+            echo "Sucessfully updated ${base}!"
+            echo
+        fi
+    )
 done

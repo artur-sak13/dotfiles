@@ -7,8 +7,14 @@
 [core]
 	autocrlf = input
 	excludesfile = ~/.gitignore
+
+	# Treat spaces before tabs and all kinds of trailing whitespace as an error
+	# [default] trailing-space: looks for spaces at the end of a line
+	# [default] space-before-tab: looks for spaces before tabs at the beginning of a line
+	whitespace = space-before-tab,-indent-with-non-tab,trailing-space
+
 	trustctime = false
-	editor = nvim
+	editor = vim
 [apply]
 	whitespace = fix
 [alias]
@@ -27,7 +33,7 @@
 
 	# Add all untracked files to .gitignore
 	ignore = "!git status | grep -P \"^\\t\" | grep -vF .gitignore | sed \"s/^\\t//\" >> .gitignore"
-	
+
 	# From trevor bramble https://twitter.com/TrevorBramble/status/774292970681937920
 	alias=!git config -l | grep ^alias | cut -c 7- | sort
 
@@ -72,10 +78,10 @@
 	# Delete all remote branches that have been merged into the remote master branch
 	master-cleanse-remote = !"git branch --remotes --merged origin/master | sed 's# *origin/##' | grep -v '^master$' xargs -I% git push origin :% 2>&1 | grep --colour=never 'deleted'"
 
-		# Expunge a file everywhere; this command is typically for a serious problem, 
-		# such as accidentially committing a file of sensistive data, such as passwords.
-		# After you use command, you will likely need to force push everything.
-		# See https://help.github.com/articles/removing-sensitive-data-from-a-repository/
+	# Expunge a file everywhere; this command is typically for a serious problem, 
+	# such as accidentially committing a file of sensistive data, such as passwords.
+	# After you use command, you will likely need to force push everything.
+	# See https://help.github.com/articles/removing-sensitive-data-from-a-repository/
 	expunge = !"f() { git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch $1\" --prune-empty --tag-name-filter cat -- --all }; f"
 
 	snapshot = !git stash push "snapshot: $(date)" && git stash apply "stash@{0}"
@@ -110,21 +116,21 @@
 	tool = vimdiff3
 	renames = copies
 [difftool]
-    prompt = false
+	prompt = false
 [help]
-    autocorrect = 1
+	autocorrect = 1
 [rerere]
-    enabled = 1
+	enabled = 1
 [rebase]
-    autosquash = true
+	autosquash = true
 [merge]
 	tool = vimdiff3
 	conflictstyle = diff3
 	prompt = false
-    log = true
+	log = true
 [branch]
-    autosetuprebase = always
+	autosetuprebase = always
 [url "git@gitlab.twopoint.io:"]
-    insteadOf = https://gitlab.twopoint.io/
+	insteadOf = "https://gitlab.twopoint.io"
 [commit]
 	gpgsign = true

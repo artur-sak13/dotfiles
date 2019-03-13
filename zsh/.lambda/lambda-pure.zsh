@@ -1,3 +1,4 @@
+#!/usr/bin/env zsh
 # λ Pure
 # by Michał Nykiel
 # https://github.com/marszall87/lambda-pure

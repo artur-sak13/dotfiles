@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Original script by Jess Frazelle
 # With modifications by Artur Sak
@@ -22,9 +22,13 @@ dcleanup() {
 }
 
 update_docker() {
+    echo
+    echo "Updating docker..."
+    echo
+
     dcleanup || true
     systemctl stop docker || true
-    echo "Here"
+
     local tmp_tar=/tmp/docker.tgz
     local binary_uri="https://download.docker.com/linux/static/edge/x86_64"
     
@@ -53,6 +57,10 @@ update_docker() {
 }
 
 update_containerd() {
+    echo
+    echo "Updating containerd..."
+    echo
+
     local tmp_tar=/tmp/containerd.tar.gz
     local containerd_version
     
@@ -74,10 +82,20 @@ update_containerd() {
 }
 
 update_rust() {
+    echo
+    echo "Updating rust..."
+    echo
+
+    command -v rustup >/dev/null 2>&1 || { echo >&2 "I require rust but it's not installed.  Aborting."; return; }
+
     rustup update
 }
 
 update_tool() {
+    echo
+    echo "Updating ${1}..."
+    echo
+    
     local tmp_zip="/tmp/${1}.zip"
     local tool_version
 
@@ -93,6 +111,10 @@ update_tool() {
 }
 
 update_apt() {
+    echo
+    echo "Updating apt..."
+    echo
+
     apt -y update
     apt -y upgrade
     apt -y autoremove
@@ -102,44 +124,64 @@ update_apt() {
 }
 
 update_brews() {
+    echo
+    echo "Updating homebrew packages..."
+    echo
+
     brew update
-	brew upgrade
-	brew cleanup -s
-	brew cask upgrade
+    brew upgrade
+    brew cleanup -s
+    brew cask upgrade
 }
 
 # Update ruby gems
 update_gems() {
+    echo
+    echo "Updating ruby gems..."
+    echo
+
     gem update --system
-	gem update
-	gem cleanup
+    gem update
+    gem cleanup
 }
 
 # Update node and npm packages
 update_node() {
-    version=$(nvm version node)
-	# shellcheck source=/dev/null
-	(
-  	cd "${NVM_DIR}"
-  	git fetch --tags origin
-  	git checkout "$(git describe --abbrev=0 --tags --match 'v[0-9]*')" "$(git rev-list --tags --max-count=1)"
-	) && \. "${NVM_DIR}/nvm.sh"
+    echo
+    echo "Updating node..."
+    echo
 
-	nvm install node --reinstall-packages-from=node
-	nvm uninstall "${version}"
-	nvm clear-cache
+    version=$(nvm version node)
+    # shellcheck source=/dev/null
+    (
+        cd "${NVM_DIR}"
+        git fetch --tags origin
+        git checkout "$(git describe --abbrev=0 --tags --match 'v[0-9]*')" "$(git rev-list --tags --max-count=1)"
+    ) && \. "${NVM_DIR}/nvm.sh"
+    
+    nvm install node --reinstall-packages-from=node
+    nvm uninstall "${version}"
+    nvm clear-cache
 }
 
 # Update pip packages
 update_python() {
+    echo
+    echo "Updating python packages..."
+    echo
+
     pip2 install --user --upgrade pip
-	pip2 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install --user --upgrade
-	pip3 install --user --upgrade pip
-	pip3 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install --user --upgrade
+    pip2 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install --user --upgrade
+    pip3 install --user --upgrade pip
+    pip3 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install --user --upgrade
 }
 
 # Update kubectl
 update_kubectl() {
+    echo
+    echo "Updating kubectl..."
+    echo
+
     KUBERNETES_VERSION=$(curl -sSL https://storage.googleapis.com/kubernetes-release/release/stable.txt)
     curl -sSL "https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl" > /usr/local/bin/kubectl
     chmod +x /usr/local/bin/kubectl
@@ -148,6 +190,10 @@ update_kubectl() {
 
 # Update kops
 update_kops() {
+    echo
+    echo "Updating kops..."
+    echo
+    
     curl -LO https://github.com/kubernetes/kops/releases/download/"$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64"
     chmod +x kops-linux-amd64
     mv kops-linux-amd64 /usr/local/bin/kops

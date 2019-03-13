@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 set -o pipefail
 
@@ -194,36 +194,39 @@ setup_sudo() {
 		echo -e 'Defaults	env_keep += "ftp_proxy http_proxy https_proxy no_proxy GOPATH EDITOR"'; \
 		echo -e "${TARGET_USER} ALL=(ALL) NOPASSWD:ALL"; \
 		echo -e "${TARGET_USER} ALL=NOPASSWD: /sbin/ifconfig, /sbin/ifup, /sbin/ifdown, /sbin/ifquery"; \
-	 } >> /etc/sudoers
-
-	 mkdir -p "/home/$TARGET_USER/Downloads"
-	 echo -e "\\n# tmpfs for downloads\\ntmpfs\\t/home/${TARGET_USER}/Downloads\\ttmpfs\\tnodev,nosuid,size=2G\\t0\\t0" >> /etc/fstab
+    } >> /etc/sudoers
+    
+    mkdir -p "/home/$TARGET_USER/Downloads"
+    echo -e "\\n# tmpfs for downloads\\ntmpfs\\t/home/${TARGET_USER}/Downloads\\ttmpfs\\tnodev,nosuid,size=2G\\t0\\t0" >> /etc/fstab
 }
 
+# install oh-my-zsh
 install_oh_my_zsh(){
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 	local user="$USER"
 	chsh -s /bin/zsh "${user}"
 }
 
+# install homebrew
 install_homebrew() {
-  ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-	brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
+    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
 }
 
+# install tmux
 install_tmux() {
 	(
-		if [[ ! -d "${HOME}/tmux" ]]; then
+        if [[ ! -d "${HOME}/tmux" ]]; then
 			git clone https://github.com/tmux/tmux.git "${HOME}/tmux"
 		fi
-
-		cd "${HOME}/tmux"
-
-		sh autogen.sh
-
-		./configure && make
-
-		sudo mv tmux /usr/local/bin
+        
+        cd "${HOME}/tmux"
+        
+        sh autogen.sh
+        
+        ./configure && make
+        
+        sudo mv tmux /usr/local/bin
 	)
 }
 
@@ -269,6 +272,7 @@ install_golang() {
 
 		go get github.com/axw/gocov/gocov
 		go get honnef.co/go/tools/cmd/staticcheck
+        go get github.com/golangci/golangci-lint/cmd/golangci-lint
 	)
 
 }
@@ -319,20 +323,25 @@ main() {
 		if [[ "$OSTYPE" != darwin* ]]; then
 			check_is_sudo
 			get_user
+
 			setup_sources
+            install_tmux
 			base
 		fi
 	elif [[ $cmd == "basemin" ]]; then
 		if [[ "$OSTYPE" != darwin* ]]; then
 			check_is_sudo
 			get_user
+
 			setup_sources_min
+
 			base_min
 		fi
+    elif [[ $cmd == "homebrew" ]]; then
+        install_homebrew
 	elif [[ $cmd == "dotfiles" ]]; then
 		get_user
 		install_oh_my_zsh
-		install_tmux
 		get_dotfiles
 	elif [[ $cmd == "rust" ]]; then
 		install_rust
