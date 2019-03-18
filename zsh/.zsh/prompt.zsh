@@ -10,7 +10,7 @@ plugins=(
 	base16-shell
 	zsh-autosuggestions
 	fast-syntax-highlighting
-	)
+)
 
 # shellcheck source=/dev/null
 source "${ZSH}/oh-my-zsh.sh"

@@ -25,12 +25,15 @@ dotfiles: ## Installs the dotfiles.
 	ln -sfn $(CURDIR)/git/.gitignore $(HOME)/.gitignore;
 	ln -sfn $(CURDIR)/git/.gitconfig $(HOME)/.gitconfig;
 
-	mkdir -p $(HOME)/.config;
+	mkdir -p $(HOME)/.config/nvim;
 	mkdir -p $(HOME)/.local/share;
 	mkdir -p $(HOME)/.aws/cli;
 
 	ln -snf $(CURDIR)/.aws/cli/alias $(HOME)/.aws/cli/alias;
 	ln -snf $(CURDIR)/zsh/.lambda/lambda-pure.zsh $(HOME)/.oh-my-zsh/custom/themes/lambda-pure.zsh-theme;
+	ln -snf $(CURDIR)/vim/.vim $(HOME)/.vim;
+	ln -snf $(CURDIR)/vim/.vimrc $(HOME)/.vimrc;
+	ln -snf $(HOME)/.vimrc $(HOME)/.config/nvim/init.vim;
 	
 	sudo ln -snf $(CURDIR)/zsh/.lambda/lambda-pure.zsh /usr/local/share/zsh/site-functions/prompt_lambda-pure_setup;
 	sudo ln -snf $(CURDIR)/zsh/.lambda/async.zsh /usr/local/share/zsh/site-functions/async;

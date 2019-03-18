@@ -25,13 +25,13 @@ short() {
 # source: https://github.com/jessfraz/dotfiles/blob/master/.functions
 json() {
 	if [ -t 0 ]; then # argument
-		python -mjson.tool <<< "$*" | pygmentize -l javascript
+		python -mjson.tool <<<"$*" | pygmentize -l javascript
 	else # pipe
 		python -mjson.tool | pygmentize -l javascript
 	fi
 }
 
-# Show all the names (CNs and SANs) listed in the SSL 
+# Show all the names (CNs and SANs) listed in the SSL
 # certificate for a given domain
 # source: https://github.com/jessfraz/dotfiles/blob/master/.functions
 getcertnames() {
@@ -42,26 +42,26 @@ getcertnames() {
 
 	local domain="${1}"
 	echo "Testing ${domain}…"
-	echo ""; # newline
+	echo "" # newline
 
 	local tmp
-	tmp=$(echo -e "GET / HTTP/1.0\\nEOT" \
-					| openssl s_client -connect "${domain}:443" 2>&1)
+	tmp=$(echo -e "GET / HTTP/1.0\\nEOT" |
+		openssl s_client -connect "${domain}:443" 2>&1)
 
-	if [[ "${tmp}" = *"-----BEGIN CERTIFICATE-----"* ]]; then
+	if [[ "${tmp}" == *"-----BEGIN CERTIFICATE-----"* ]]; then
 		local certText
-		certText=$(echo "${tmp}" \
-						| openssl x509 -text -certopt "no_header, no_serial, no_version, \
+		certText=$(echo "${tmp}" |
+			openssl x509 -text -certopt "no_header, no_serial, no_version, \
 						no_signame, no_validity, no_issuer, no_pubkey, no_sigdump, no_aux")
 
 		echo "Common Name:"
-		echo ""; # newline
+		echo "" # newline
 		echo "${certText}" | grep "Subject:" | sed -e "s/^.*CN=//"
-		echo ""; # newline
+		echo "" # newline
 		echo "Subject Alternative Name(s):"
-		echo ""; # newline
-		echo "${certText}" | grep -A 1 "Subject Alternative Name:" \
-						| sed -e "2s/DNS://g" -e "s/ //g" | tr "," "\\n" | tail -n +2
+		echo "" # newline
+		echo "${certText}" | grep -A 1 "Subject Alternative Name:" |
+			sed -e "2s/DNS://g" -e "s/ //g" | tr "," "\\n" | tail -n +2
 		return 0
 	else
 		echo "ERROR: Certificate not found."
@@ -79,10 +79,9 @@ up() {
 	else
 		local d=""
 		limit=$1
-		for ((i=1; i <= limit; i++))
-			do
-				d=$d/..
-			done
+		for ((i = 1; i <= limit; i++)); do
+			d=$d/..
+		done
 		d=$(echo $d | sed 's/^\///')
 		cd "$d" || exit
 	fi
@@ -92,14 +91,14 @@ up() {
 # source: https://github.com/jessfraz/dotfiles/blob/master/.functions
 man() {
 	env \
-			LESS_TERMCAP_mb="$(printf '\e[01;31m')" \
-			LESS_TERMCAP_md="$(printf '\e[01;38;5;74m')" \
-			LESS_TERMCAP_me="$(printf '\e[0m')" \
-			LESS_TERMCAP_se="$(printf '\e[0m')" \
-			LESS_TERMCAP_so="$(printf '\e[38;33;246m')" \
-			LESS_TERMCAP_ue="$(printf '\e[0m')" \
-			LESS_TERMCAP_us="$(printf '\e[04;38;5;146m')" \
-			man "$@"
+		LESS_TERMCAP_mb="$(printf '\e[01;31m')" \
+		LESS_TERMCAP_md="$(printf '\e[01;38;5;74m')" \
+		LESS_TERMCAP_me="$(printf '\e[0m')" \
+		LESS_TERMCAP_se="$(printf '\e[0m')" \
+		LESS_TERMCAP_so="$(printf '\e[38;33;246m')" \
+		LESS_TERMCAP_ue="$(printf '\e[0m')" \
+		LESS_TERMCAP_us="$(printf '\e[04;38;5;146m')" \
+		man "$@"
 }
 
 # Call from a local repo to open the repository on github/gitlab
@@ -115,18 +114,18 @@ repo() {
 	# Fix git@gitlab.com: URLs
 	base_url=${base_url//git@gitlab\.com:/https:\/\/gitlab\.com\/}
 
-	# Fix git@gitlab.com: URLs
-	base_url=${base_url//git@gitlab\.twopoint\.io:/https:\/\/gitlab\.twopoint\.io\/}
-
 	# Validate that this folder is a git folder
-	if ! git branch 2>/dev/null 1>&2 ; then
+	if ! git branch 2>/dev/null 1>&2; then
 		echo "Not a git repo!"
 		exit $?
 	fi
 
 	# Find current directory relative to .git parent
 	full_path=$(pwd)
-	git_base_path=$(cd "./$(git rev-parse --show-cdup)" || exit 1; pwd)
+	git_base_path=$(
+		cd "./$(git rev-parse --show-cdup)" || exit 1
+		pwd
+	)
 	relative_path=${full_path#$git_base_path} # remove leading git_base_path from working directory
 
 	# If filename argument is present, append it
@@ -144,7 +143,7 @@ repo() {
 	url="$base_url/tree/$branch$relative_path"
 
 	echo "Calling $(type open) for $url"
-	open "$url" &> /dev/null || (echo "Using $(type open) to open URL failed." && exit 1);
+	open "$url" &>/dev/null || (echo "Using $(type open) to open URL failed." && exit 1)
 }
 
 # `tre` is a shorthand for `tree` with hidden files and color enabled, ignoring
@@ -161,7 +160,7 @@ tre() {
 isup() {
 	local uri=$1
 
-	if curl -s --head  --request GET "$uri" | grep "200 OK" > /dev/null ; then
+	if curl -s --head --request GET "$uri" | grep "200 OK" >/dev/null; then
 		notify-send --urgency=critical "$uri is down"
 	else
 		notify-send --urgency=low "$uri is up"
@@ -179,7 +178,7 @@ helmins() {
 # Uninstall tiller from Kubernetes cluster
 helmdel() {
 	kubectl -n kube-system delete deployment tiller-deploy
-  kubectl -n kube-system delete svc tiller-deploy
+	kubectl -n kube-system delete svc tiller-deploy
 	kubectl delete clusterrolebinding tiller
 	kubectl -n kube-system delete serviceaccount tiller
 }
@@ -189,18 +188,18 @@ gitnew() {
 }
 
 # Port forward weave scope pod
-weaveproxy() { 
+weaveproxy() {
 	kubectl port-forward -n weave "$(kubectl get -n weave pod --selector=weave-scope-component=app -o jsonpath='{.items..metadata.name}')" 4040
 }
 
 # Get latest Container Linux HVM ami-id
-coreosver () {
+coreosver() {
 	curl -s https://coreos.com/dist/aws/aws-stable.json | jq -r '.["us-east-2"].hvm'
 }
 
 # Kill ckb-next daemon to restore dat RGB goodness
 ckbkill() {
-  sudo killall -KILL ckb-next-daemon
+	sudo killall -KILL ckb-next-daemon
 }
 
 # Display only the most useful info when running `dig`
@@ -218,7 +217,7 @@ fukmap() {
 tbar() {
 	local tar=$1
 	local dir=$2
-	tar -cvzf "$tar" "$dir" | tqdm --unit_scale --total "$(find "$dir" -type f | wc -l )" > /dev/null
+	tar -cvzf "$tar" "$dir" | tqdm --unit_scale --total "$(find "$dir" -type f | wc -l)" >/dev/null
 }
 
 restart_gpgagent() {

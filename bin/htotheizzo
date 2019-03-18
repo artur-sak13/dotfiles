@@ -13,10 +13,10 @@ help() {
 dcleanup() {
     local containers
     mapfile -t containers < <(docker ps --filter status=exited -q 2>/dev/null)
-    
+
     docker rm "${containers[@]}" 2>/dev/null
     local images
-    
+
     mapfile -t images < <(docker images --filter dangling=true -q 2>/dev/null)
     docker rmi "${images[@]}" 2>/dev/null
 }
@@ -31,9 +31,9 @@ update_docker() {
 
     local tmp_tar=/tmp/docker.tgz
     local binary_uri="https://download.docker.com/linux/static/edge/x86_64"
-    
+
     local docker_version
-    
+
     docker_version=$(curl -sSL "https://api.github.com/repos/docker/docker-ce/releases/latest" | jq --raw-output .tag_name)
     docker_version=${docker_version#v}
 
@@ -41,16 +41,16 @@ update_docker() {
         set -x
         curl -fSL "${binary_uri}/docker-${docker_version}.tgz" -o "$tmp_tar"
         tar -C /usr/local/bin --strip-components 1 -xzvf "$tmp_tar"
-        
+
         rm -f "${tmp_tar}"
         rm -f /usr/local/bin/ctr
         rm -f /usr/local/bin/containerd
         rm -f /usr/local/bin/containerd-shim
         docker -v
     )
-    
+
     chmod +x /usr/local/bin/docker*
-    
+
     systemctl daemon-reload
     systemctl enable docker
     systemctl start docker
@@ -63,10 +63,10 @@ update_containerd() {
 
     local tmp_tar=/tmp/containerd.tar.gz
     local containerd_version
-    
+
     containerd_version=$(curl -sSL "https://api.github.com/repos/containerd/containerd/releases" | jq --raw-output '.[0].tag_name')
     containerd_version=${containerd_version#v}
-    
+
     local binary_uri="https://github.com/containerd/containerd/releases/download/v${containerd_version}/containerd-${containerd_version}.linux-amd64.tar.gz"
     (
         set -x
@@ -75,7 +75,7 @@ update_containerd() {
         rm -f "$tmp_tar"
         containerd -v
     )
-    
+
     systemctl daemon-reload
     systemctl enable containerd
     systemctl start containerd
@@ -86,7 +86,10 @@ update_rust() {
     echo "Updating rust..."
     echo
 
-    command -v rustup >/dev/null 2>&1 || { echo >&2 "I require rust but it's not installed.  Aborting."; return; }
+    command -v rustup >/dev/null 2>&1 || {
+        echo >&2 "I require rust but it's not installed.  Aborting."
+        return
+    }
 
     rustup update
 }
@@ -95,7 +98,7 @@ update_tool() {
     echo
     echo "Updating ${1}..."
     echo
-    
+
     local tmp_zip="/tmp/${1}.zip"
     local tool_version
 
@@ -158,7 +161,7 @@ update_node() {
         git fetch --tags origin
         git checkout "$(git describe --abbrev=0 --tags --match 'v[0-9]*')" "$(git rev-list --tags --max-count=1)"
     ) && \. "${NVM_DIR}/nvm.sh"
-    
+
     nvm install node --reinstall-packages-from=node
     nvm uninstall "${version}"
     nvm clear-cache
@@ -171,9 +174,9 @@ update_python() {
     echo
 
     pip2 install --user --upgrade pip
-    pip2 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install --user --upgrade
+    pip2 freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install --user --upgrade
     pip3 install --user --upgrade pip
-    pip3 freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install --user --upgrade
+    pip3 freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install --user --upgrade
 }
 
 # Update kubectl
@@ -183,7 +186,7 @@ update_kubectl() {
     echo
 
     KUBERNETES_VERSION=$(curl -sSL https://storage.googleapis.com/kubernetes-release/release/stable.txt)
-    curl -sSL "https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl" > /usr/local/bin/kubectl
+    curl -sSL "https://storage.googleapis.com/kubernetes-release/release/${KUBERNETES_VERSION}/bin/linux/amd64/kubectl" >/usr/local/bin/kubectl
     chmod +x /usr/local/bin/kubectl
     echo "kubectl $(kubectl version --client --short)"
 }
@@ -193,7 +196,7 @@ update_kops() {
     echo
     echo "Updating kops..."
     echo
-    
+
     curl -LO https://github.com/kubernetes/kops/releases/download/"$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64"
     chmod +x kops-linux-amd64
     mv kops-linux-amd64 /usr/local/bin/kops
@@ -210,24 +213,24 @@ update() {
             exit 1
         fi
 
-        update_apt;
-        update_docker;
-        update_containerd; 
-        update_tool "packer";
-        update_tool "terraform";
-        update_kubectl;
-        update_kops;
+        update_apt
+        update_docker
+        update_containerd
+        update_tool "packer"
+        update_tool "terraform"
+        update_kubectl
+        update_kops
     elif [[ "$OSTYPE" == darwin* ]]; then
-        update_brews;
-        update_gems;
-        update_python;
-        update_node;
-        update_rust;
+        update_brews
+        update_gems
+        update_python
+        update_node
+        update_rust
     else
         echo "We don't have update functions for OS: ${OSTYPE}"
         echo "Moving on..."
     fi
-    
+
     echo "htotheizzo is complete, you got 99 problems but updates ain't one"
 }
 

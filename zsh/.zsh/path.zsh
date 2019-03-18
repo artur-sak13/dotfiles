@@ -33,7 +33,7 @@ path=(
 	/usr/games
 	/usr/sbin
 	/opt/X11/bin
-	)
+)
 
 # shellcheck disable=SC2034
 manpath=(
@@ -42,10 +42,10 @@ manpath=(
 	"${HOMEBREW_PREFIX}/opt/make/libexec/gnuman"
 	"${HOMEBREW_PREFIX}/opt/grep/libexec/gnuman"
 	"${MANPATH}"
-	)
+)
 
 # shellcheck disable=SC2207
-kubeconfigs=( $(find "${HOME}/.kube/eksctl/clusters/" -maxdepth 1 -mindepth 1 -type f) )
+kubeconfigs=($(find "${HOME}/.kube/eksctl/clusters/" -maxdepth 1 -mindepth 1 -type f))
 kcs=""
 echo "${kubeconfigs[@]}"
 for kc in "${kubeconfigs[@]}"; do

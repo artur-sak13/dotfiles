@@ -1,4 +1,6 @@
+.DS_Store
 tmux/bin/flake8
 vim/.vim/autoload/
 vim/.vim/plugged
 vim/.vim/undo
+.iterm/

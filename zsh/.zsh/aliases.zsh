@@ -71,4 +71,3 @@ alias pubkey="more ~/.ssh/id_rsa.pub | pbcopy | echo '=> Public key copied to pa
 
 # Pipe private key to clipboard.
 alias privkey="more ~/.ssh/id_rsa | pbcopy | echo '=> Private key copied to pasteboard.'"
-

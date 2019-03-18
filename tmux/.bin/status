@@ -2,7 +2,7 @@
 SYS=$(uname -s)
 FULL=▓
 EMPTY=░
-EOL=▒ 
+EOL=▒
 SIZE=7
 C0="#000000"
 C1="#222222"
@@ -16,24 +16,24 @@ C7="#8787af"
 draw() {
 	perc=$1
 	SIZE=$2
-	inc=$(( perc * SIZE / 100 ))
+	inc=$((perc * SIZE / 100))
 	out=
-	for v in $(seq 0 $(( SIZE - 1 ))); do
-		test "$v" -le "$inc"   \
-		&& out="${out}#[fg=$C1]${FULL}" \
-		|| out="${out}#[fg=$C1]${EMPTY}"
+	for v in $(seq 0 $((SIZE - 1))); do
+		test "$v" -le "$inc" &&
+			out="${out}#[fg=$C1]${FULL}" ||
+			out="${out}#[fg=$C1]${EMPTY}"
 	done
 	echo "$out"
 }
 
 temp() {
 	if [ "$SYS" = "Darwin" ]; then
-		t=$(istats cpu temp --value-only | awk '{s=$1} END {print int(s)}');
+		t=$(istats cpu temp --value-only | awk '{s=$1} END {print int(s)}')
 	else
-		t=$(sensors | awk '/Core\ 0/ {gsub(/\+/,"",$3); gsub(/\..+/,"",$3); print $3}');
+		t=$(sensors | awk '/Core\ 0/ {gsub(/\+/,"",$3); gsub(/\..+/,"",$3); print $3}')
 	fi
 
-	tc=$C0;
+	tc=$C0
 	if [ "$t" -lt 50 ]; then
 		tc=$C2
 	elif [ "$t" -gt 75 ]; then

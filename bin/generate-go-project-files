@@ -30,7 +30,7 @@ if [[ "$PROJECT_DIR" == "projects" ]]; then
 fi
 
 # Generate a file passed as an argument.
-generate_file(){
+generate_file() {
 	if [[ "$PROJECT" == "$BASE_PROJECT" ]]; then
 		# Skip getting the files if we are on the base project.
 		return
@@ -39,7 +39,7 @@ generate_file(){
 	file=$1
 
 	if [[ -z "$file" ]]; then
-		echo "Pass a file name to generate_file." 1>&2;
+		echo "Pass a file name to generate_file." 1>&2
 		exit 1
 	fi
 
@@ -63,43 +63,43 @@ generate_file(){
 
 	echo "Writing $file"
 
-	echo "$contents" > "$file"
+	echo "$contents" >"$file"
 }
 
 # Generate the LICENSE file.
-license(){
+license() {
 	year=$(date +"%Y")
 	license_file="LICENSE"
 
 	echo "Writing $license_file"
 
-	cat <<-EOF > "$license_file"
-	The MIT License (MIT)
-
-	Copyright (c) $year $OWNER
-
-	Permission is hereby granted, free of charge, to any person obtaining a copy
-	of this software and associated documentation files (the "Software"), to deal
-	in the Software without restriction, including without limitation the rights
-	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-	copies of the Software, and to permit persons to whom the Software is
-	furnished to do so, subject to the following conditions:
-
-	The above copyright notice and this permission notice shall be included in all
-	copies or substantial portions of the Software.
-
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-	SOFTWARE.
+	cat <<-EOF >"$license_file"
+		The MIT License (MIT)
+		
+		Copyright (c) $year $OWNER
+		
+		Permission is hereby granted, free of charge, to any person obtaining a copy
+		of this software and associated documentation files (the "Software"), to deal
+		in the Software without restriction, including without limitation the rights
+		to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+		copies of the Software, and to permit persons to whom the Software is
+		furnished to do so, subject to the following conditions:
+		
+		The above copyright notice and this permission notice shall be included in all
+		copies or substantial portions of the Software.
+		
+		THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+		AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+		LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+		OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+		SOFTWARE.
 	EOF
 }
 
 # Generate the VERSION.txt file.
-version(){
+version() {
 	version_file="VERSION.txt"
 
 	# Only generate the version file if it doesn't exist already.
@@ -112,12 +112,12 @@ version(){
 		fi
 		echo "Writing $version_file"
 
-		echo "v0.0.0" > "$version_file"
+		echo "v0.0.0" >"$version_file"
 	fi
 }
 
 # Generate the README.md file,
-readme(){
+readme() {
 	readme_file="README.md"
 
 	# Only generate the readme file if it doesn't exist already, otherwise try
@@ -167,40 +167,40 @@ readme(){
 	else
 		echo "Writing $readme_file"
 
-		cat <<-EOF > "$readme_file"
-		# $PROJECT_NAME
-
-		[![Travis CI](https://img.shields.io/travis/${PROJECT_DIR}/${PROJECT_NAME}.svg?style=for-the-badge)](https://travis-ci.org/${PROJECT_DIR}/${PROJECT_NAME})
-		[![GoDoc](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=for-the-badge)](https://godoc.org/github.com/${PROJECT_DIR}/${PROJECT_NAME})
-
-		{DESCRIPTION}
-
-		* [Installation](README.md#installation)
-		   * [Binaries](README.md#binaries)
-		   * [Via Go](README.md#via-go)
-		* [Usage](README.md#usage)
-
-		## Installation
-
-		#### Binaries
-
-		For installation instructions from binaries please visit the [Releases Page](https://github.com/${PROJECT_DIR}/${PROJECT_NAME}/releases).
-
-		#### Via Go
-
-		\`\`\`console
-		$ go get github.com/${PROJECT_DIR}/${PROJECT_NAME}
-		\`\`\`
-
-		## Usage
-
-		\`\`\`console
-		\`\`\`
+		cat <<-EOF >"$readme_file"
+			# $PROJECT_NAME
+			
+			[![Travis CI](https://img.shields.io/travis/${PROJECT_DIR}/${PROJECT_NAME}.svg?style=for-the-badge)](https://travis-ci.org/${PROJECT_DIR}/${PROJECT_NAME})
+			[![GoDoc](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=for-the-badge)](https://godoc.org/github.com/${PROJECT_DIR}/${PROJECT_NAME})
+			
+			{DESCRIPTION}
+			
+			* [Installation](README.md#installation)
+			   * [Binaries](README.md#binaries)
+			   * [Via Go](README.md#via-go)
+			* [Usage](README.md#usage)
+			
+			## Installation
+			
+			#### Binaries
+			
+			For installation instructions from binaries please visit the [Releases Page](https://github.com/${PROJECT_DIR}/${PROJECT_NAME}/releases).
+			
+			#### Via Go
+			
+			\`\`\`console
+			$ go get github.com/${PROJECT_DIR}/${PROJECT_NAME}
+			\`\`\`
+			
+			## Usage
+			
+			\`\`\`console
+			\`\`\`
 		EOF
 	fi
 }
 
-travis(){
+travis() {
 	travis_file=".travis.yml"
 	echo "Updating $travis_file"
 
@@ -225,10 +225,10 @@ travis(){
 	fi
 }
 
-main(){
+main() {
 	echo "Generating project files for ${PROJECT_NAME}..."
 
-	files=( ".travis.yml" ".gitignore" ".goosarch" "Makefile" "basic.mk" "Dockerfile" "version/version.go" )
+	files=(".travis.yml" ".gitignore" ".goosarch" "Makefile" "basic.mk" "Dockerfile" "version/version.go")
 	for file in "${files[@]}"; do
 		generate_file "$file"
 	done

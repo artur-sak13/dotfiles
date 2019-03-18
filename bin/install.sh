@@ -43,15 +43,15 @@ setup_sources_min() {
 		--no-install-recommends
 
 	# latest git
-	cat <<-EOF > /etc/apt/sources.list.d/git-core.list
-	deb http://ppa.launchpad.net/git-core/ppa/ubuntu xenial main
-	deb-src http://ppa.launchpad.net/git-core/ppa/ubuntu xenial main
+	cat <<-EOF >/etc/apt/sources.list.d/git-core.list
+		deb http://ppa.launchpad.net/git-core/ppa/ubuntu xenial main
+		deb-src http://ppa.launchpad.net/git-core/ppa/ubuntu xenial main
 	EOF
 
 	# neovim
-	cat <<-EOF > /etc/apt/sources.list.d/neovim.list
-	deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu xenial main
-	deb-src http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu xenial main
+	cat <<-EOF >/etc/apt/sources.list.d/neovim.list
+		deb http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu xenial main
+		deb-src http://ppa.launchpad.net/neovim-ppa/unstable/ubuntu xenial main
 	EOF
 
 	# add the git-core ppa gpg key
@@ -65,24 +65,24 @@ setup_sources_min() {
 
 	# turn off translations, speed up apt update
 	mkdir -p /etc/apt/apt.conf.d
-	echo 'Acquire::Languages "none";' > /etc/apt/apt.conf.d/99translations
+	echo 'Acquire::Languages "none";' >/etc/apt/apt.conf.d/99translations
 }
 
 setup_sources() {
-	setup_sources_min;
+	setup_sources_min
 
-	cat <<-EOF > /etc/apt/sources.list
-	deb http://httpredir.debian.org/debian stretch main contrib non-free
-	deb-src http://httpredir.debian.org/debian/ stretch main contrib non-free
-
-	deb http://httpredir.debian.org/debian/ stretch-updates main contrib non-free
-	deb-src http://httpredir.debian.org/debian/ stretch-updates main contrib non-free
-
-	deb http://security.debian.org/ stretch/updates main contrib non-free
-	deb-src http://security.debian.org/ stretch/updates main contrib non-free
-
-	deb http://httpredir.debian.org/debian experimental main contrib non-free
-	deb-src http://httpredir.debian.org/debian experimental main contrib non-free
+	cat <<-EOF >/etc/apt/sources.list
+		deb http://httpredir.debian.org/debian stretch main contrib non-free
+		deb-src http://httpredir.debian.org/debian/ stretch main contrib non-free
+		
+		deb http://httpredir.debian.org/debian/ stretch-updates main contrib non-free
+		deb-src http://httpredir.debian.org/debian/ stretch-updates main contrib non-free
+		
+		deb http://security.debian.org/ stretch/updates main contrib non-free
+		deb-src http://security.debian.org/ stretch/updates main contrib non-free
+		
+		deb http://httpredir.debian.org/debian experimental main contrib non-free
+		deb-src http://httpredir.debian.org/debian experimental main contrib non-free
 	EOF
 }
 
@@ -147,7 +147,7 @@ base_min() {
 }
 
 base() {
-	base_min;
+	base_min
 
 	apt update || true
 	apt -y upgrade
@@ -189,44 +189,53 @@ setup_sudo() {
 	sudo groupadd docker
 	sudo gpasswd -a "$TARGET_USER" docker
 
-	{ \
-		echo -e "Defaults	secure_path=\"/usr/local/go/bin:/home/${TARGET_USER}/.go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/bcc/tools\""; \
-		echo -e 'Defaults	env_keep += "ftp_proxy http_proxy https_proxy no_proxy GOPATH EDITOR"'; \
-		echo -e "${TARGET_USER} ALL=(ALL) NOPASSWD:ALL"; \
-		echo -e "${TARGET_USER} ALL=NOPASSWD: /sbin/ifconfig, /sbin/ifup, /sbin/ifdown, /sbin/ifquery"; \
-    } >> /etc/sudoers
-    
-    mkdir -p "/home/$TARGET_USER/Downloads"
-    echo -e "\\n# tmpfs for downloads\\ntmpfs\\t/home/${TARGET_USER}/Downloads\\ttmpfs\\tnodev,nosuid,size=2G\\t0\\t0" >> /etc/fstab
+	{
+		echo -e "Defaults	secure_path=\"/usr/local/go/bin:/home/${TARGET_USER}/.go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/bcc/tools\""
+		echo -e 'Defaults	env_keep += "ftp_proxy http_proxy https_proxy no_proxy GOPATH EDITOR"'
+		echo -e "${TARGET_USER} ALL=(ALL) NOPASSWD:ALL"
+		echo -e "${TARGET_USER} ALL=NOPASSWD: /sbin/ifconfig, /sbin/ifup, /sbin/ifdown, /sbin/ifquery"
+	} >>/etc/sudoers
+
+	mkdir -p "/home/$TARGET_USER/Downloads"
+	echo -e "\\n# tmpfs for downloads\\ntmpfs\\t/home/${TARGET_USER}/Downloads\\ttmpfs\\tnodev,nosuid,size=2G\\t0\\t0" >>/etc/fstab
 }
 
 # install oh-my-zsh
-install_oh_my_zsh(){
+install_oh_my_zsh() {
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 	local user="$USER"
 	chsh -s /bin/zsh "${user}"
+
+	local plugins=(oldratlee/hacker-quotes zsh-users/zsh-autosuggestions zdharma/fast-syntax-highlighting)
+
+	for plugin in "${plugins[@]}"; do
+		repo=$(basename "$plugin")
+		if [[ ! -d "${HOME}/.oh-my-zsh/custom/plugins/${repo}" ]]; then
+			git clone "https://github.com/${plugin}" "${HOME}/.oh-my-zsh/custom/plugins/${repo}"
+		fi
+	done
 }
 
 # install homebrew
 install_homebrew() {
-    ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-    brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
+	ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
 }
 
 # install tmux
 install_tmux() {
 	(
-        if [[ ! -d "${HOME}/tmux" ]]; then
+		if [[ ! -d "${HOME}/tmux" ]]; then
 			git clone https://github.com/tmux/tmux.git "${HOME}/tmux"
 		fi
-        
-        cd "${HOME}/tmux"
-        
-        sh autogen.sh
-        
-        ./configure && make
-        
-        sudo mv tmux /usr/local/bin
+
+		cd "${HOME}/tmux"
+
+		sh autogen.sh
+
+		./configure && make
+
+		sudo mv tmux /usr/local/bin
 	)
 }
 
@@ -272,7 +281,7 @@ install_golang() {
 
 		go get github.com/axw/gocov/gocov
 		go get honnef.co/go/tools/cmd/staticcheck
-        go get github.com/golangci/golangci-lint/cmd/golangci-lint
+		go get github.com/golangci/golangci-lint/cmd/golangci-lint
 	)
 
 }
@@ -302,13 +311,14 @@ get_dotfiles() {
 }
 
 usage() {
-	echo -e "install.sh\\n\\tThis script installs setup\\n"
+	echo -e "install.sh\\n\\tThis script installs my setup on macOS or Debian.\\n"
 	echo "Usage:"
 	echo "  base                                - setup sources & install base pkgs"
 	echo "  basemin                             - setup sources & install base min pkgs"
-	echo "  homebrew                            - install homebrew"
 	echo "  dotfiles                            - get dotfiles"
 	echo "  golang                              - install golang and packages"
+	echo "  homebrew                            - install homebrew"
+	echo "  oh-my-zsh														- install oh-my-zsh"
 	echo "  rust                                - install rust"
 }
 
@@ -325,7 +335,7 @@ main() {
 			get_user
 
 			setup_sources
-            install_tmux
+			install_tmux
 			base
 		fi
 	elif [[ $cmd == "basemin" ]]; then
@@ -337,8 +347,10 @@ main() {
 
 			base_min
 		fi
-    elif [[ $cmd == "homebrew" ]]; then
-        install_homebrew
+	elif [[ $cmd == "homebrew" ]]; then
+		install_homebrew
+	elif [[ $cmd == "oh-my-zsh" ]]; then
+		install_oh_my_zsh
 	elif [[ $cmd == "dotfiles" ]]; then
 		get_user
 		install_oh_my_zsh
