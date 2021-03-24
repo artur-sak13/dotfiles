@@ -4,7 +4,7 @@
 ###############################################################
 # shellcheck source=/dev/null
 if hash bat 2>/dev/null; then
-  alias cat="bat"
+  alias cat="bat --paging=never"
 fi
 
 if hash exa 2>/dev/null; then
