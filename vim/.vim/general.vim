@@ -166,3 +166,4 @@ set nocursorline
 syntax sync minlines=256
 set synmaxcol=300
 set regexpengine=1
+set fileencoding=utf-8

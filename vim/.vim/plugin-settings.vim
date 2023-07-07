@@ -13,13 +13,6 @@ let NERDTreeQuitOnOpen = 1
 
 let NERDTreeIgnore = ['\.vim$', '\~$', '\.git$']
 
-" Ale Linting
-" let g:ale_completion_enabled = 1
-" let g:ale_sign_column_always = 1
-" let g:ale_sign_error = '× '
-" let g:ale_sign_warning = '> '
-" highlight ALEErrorSign ctermbg=234 ctermfg=magenta
-
 " DelimitMate
 let g:delimitMate_expand_space = 1
 let g:delimitMate_expand_cr = 2
@@ -68,27 +61,11 @@ endfunction
 nnoremap <leader>gu :GundoToggle<CR>
 let g:gundo_close_on_revert = 1
 
-" Deoplete
-if has('nvim')
-  if has('mac')
-    let g:python_host_prog = '/usr/local/bin/python2'
-    let g:python3_host_prog = '/usr/local/bin/python3'
-  else
-    let g:python_host_prog = '/usr/bin/python2'
-    let g:python3_host_prog = '/usr/bin/python3'
-  endif
-  
-  let g:deoplete#enable_ignore_case = 1
-  let g:deoplete#enable_at_startup = 1
-  let g:deoplete#ignore_sources = {}
-  let g:deoplete#ignore_sources._ = ['buffer', 'member', 'tag', 'file', 'neosnippet']
-  let g:deoplete#sources#go#sort_class = ['func', 'type', 'var', 'const']
-  let g:deoplete#sources#go#align_class = 1
+" Perl Provider
+let g:loaded_perl_provider = 0
 
-  call deoplete#custom#source('_', 'matchers', ['matcher_fuzzy'])
-  call deoplete#custom#source('_', 'converters', ['converter_remove_paren'])
-  call deoplete#custom#source('_', 'disabled_syntaxes', ['Comment', 'String'])
-endif
+" Deoplete
+let g:loaded_python_provider = 0
 
 if has('autocmd')
     filetype plugin indent on
@@ -158,7 +135,7 @@ highlight GitGutterChangeDelete ctermfg=red ctermbg=234
 
 " Vim-Move
 " Use ^{h,j} to move lines
-let g:move_key_modifier = 'A'               
+let g:move_key_modifier = 'A'
 
 " Vim Plug options
 let g:plug_timeout = 360

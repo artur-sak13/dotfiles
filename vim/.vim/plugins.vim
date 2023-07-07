@@ -22,11 +22,11 @@ Plug 'roxma/vim-tmux-clipboard'         "Vim and Tmux clipboard integration
 " Code Formatting
 Plug 'tpope/vim-surround'               "Easily delete, add, or replace surroundings (i.e. parenthesis, brackets, etc.)
 Plug 'tpope/vim-endwise'                "End certain structures automatically (i.e. end after if, do, def, etc.)
-Plug 'tpope/vim-fugitive'				"Nice git integration
+Plug 'tpope/vim-fugitive'               "Nice git integration
 Plug 'godlygeek/tabular'                "Regex code alignment
 Plug 'Raimondi/delimitMate'             "Autoclose quotes, parenthesis, brackets, etc.
 Plug 'Chiel92/vim-autoformat'           "External formatting program integration
-Plug 'neomake/neomake'					"Asynchronously run programs
+Plug 'neomake/neomake'                  "Asynchronously run programs
 " Plug 'junegunn/vim-easy-align'         Potential substitute for tabular alignment
 
 " Linting
@@ -40,14 +40,13 @@ Plug 'sjl/gundo.vim'                    "Undo tree visualization
 Plug 'terryma/vim-multiple-cursors'     "Sublime Text style multiple selection for Vim
 
 "Asynchronous keyword completion
-Plug 'Shougo/deoplete.nvim', has('nvim') ? {} : { 'do': [':UpdateRemotePlugins',':set runtimepath+=~/.dotfiles/vim/.vim/plugged/deoplete.nvim/']}
+" Plug 'Shougo/deoplete.nvim', has('nvim') ? {} : { 'do': [':UpdateRemotePlugins',':set runtimepath+=~/dotfiles/vim/.vim/plugged/deoplete.nvim/']}
 
 " Git
 Plug 'airblade/vim-gitgutter'           "Asynchronously displays a git diff in the sign column
 Plug 'Xuyuanp/nerdtree-git-plugin'      "Show git repo status on NERDTree
 
 Plug 'sheerun/vim-polyglot'             "A collection of language packs for Vim
-Plug 'fatih/vim-go'                     "Go language support
 
 " Themes
 Plug 'itchyny/lightline.vim'            "Minimal statusline

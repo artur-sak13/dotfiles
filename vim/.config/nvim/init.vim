@@ -1,1 +1,1 @@
-/home/admin/.vimrc
+/Users/artursak/.vimrc

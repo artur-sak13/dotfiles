@@ -47,10 +47,10 @@ set t_Co=256
 " endif
 
 " 256 colorspace
-let base16colorspace=256  
+let base16colorspace=256
 
 " Set UTF-8 as standard encoding and en_US as the standard language
-set encoding=utf8
+set encoding=utf-8
 try
     lang en_US
 catch
