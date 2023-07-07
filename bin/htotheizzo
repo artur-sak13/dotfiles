@@ -162,7 +162,7 @@ update_node() {
         git checkout "$(git describe --abbrev=0 --tags --match 'v[0-9]*')" "$(git rev-list --tags --max-count=1)"
     ) && \. "${NVM_DIR}/nvm.sh"
 
-    nvm install node --reinstall-packages-from=node
+    nvm install node --reinstall-packages-from=node --latest-npm
     nvm uninstall "${version}"
     nvm clear-cache
 }
@@ -236,10 +236,29 @@ update() {
 
 main() {
     local arg=$1
-    if [[ -n "$arg" ]]; then
+    if [[ -z "$arg" ]]; then
         help
     else
-        update
+        case $arg in
+        node)
+            update_node
+            ;;
+        brew)
+            update_brews
+            ;;
+        gems)
+            update_gems
+            ;;
+        python)
+            update_python
+            ;;
+        rust)
+            update_rust
+            ;;
+        *)
+            update
+            ;;
+        esac
     fi
 }
 
