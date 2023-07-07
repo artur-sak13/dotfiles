@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 ###############################################################
 # => Alises
 ###############################################################
@@ -73,6 +73,7 @@ if [[ "$OSTYPE" == darwin* ]]; then
   alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
   alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
   alias plistbuddy="/usr/libexec/PlistBuddy"
+  alias lsusb="ioreg -p IOUSB -w0 | sed 's/[^o]*o //; s/@.*$//' | grep -v '^Root.*'"
 fi
 
 alias k="kubectl"
@@ -83,3 +84,11 @@ alias pubkey="more ~/.ssh/id_rsa.pub | pbcopy | echo '=> Public key copied to pa
 
 # Pipe private key to clipboard.
 alias privkey="more ~/.ssh/id_rsa | pbcopy | echo '=> Private key copied to pasteboard.'"
+
+alias gam="${HOME}/bin/gamadv-xtd3/gam"
+
+alias work="cd ${PROJECTS}/twopt/"
+alias personal="cd ${PROJECTS}/$(git config user.name)/"
+alias oss="cd ${PROJECTS}/oss/"
+
+alias secure_input_user="ioreg -l -w 0 |  tr ',' '\n' 2&> /dev/null | grep kCGSSessionSecureInputPID | cut -f 2 -d = | uniq | xargs ps -o command= -p"
