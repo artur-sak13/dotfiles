@@ -2,11 +2,12 @@
   name = artur-sak13
   email = artursak1994@gmail.com
   signingkey = 0xC886E70315860171
-[credential]
-  helper = osxkeychain
+
 [core]
   autocrlf = input
+
   excludesfile = ~/.gitignore
+  attributesfile = ~/.gitattributes
 
   # Treat spaces before tabs and all kinds of trailing whitespace as an error
   # [default] trailing-space: looks for spaces at the end of a line
@@ -15,8 +16,10 @@
 
   trustctime = false
   editor = vim
+
 [apply]
   whitespace = fix
+
 [alias]
   # Color graph log view
   graph = log --graph --color --pretty=format:"%C(yellow)%H%C(green)%d%C(reset)%n%x20%cd%n%x20%cn%C(blue)%x20(%ce)%x20%C(cyan)[gpg:%GK%x20%G?]%C(reset)%n%x20%s%n"
@@ -31,13 +34,16 @@
   remotes = remote -v
   stashes = stash list
 
+  # Amend the currently staged files to the latest commit
+  amend = commit --amend --reuse-message=HEAD
+
   # Add all untracked files to .gitignore
   ignore = "!git status | grep -P \"^\\t\" | grep -vF .gitignore | sed \"s/^\\t//\" >> .gitignore"
 
   # From trevor bramble https://twitter.com/TrevorBramble/status/774292970681937920
-  alias = !git config -l | grep ^alias | cut -c 7- | sort
+  #alias = !git config -l | grep ^alias | cut -c 7- | sort
 
-  aliases = "!git config --get-regexp '^alias\\.' | cut -c 7- | sort | sed 's/ / = /'"
+  #aliases = "!git config --get-regexp '^alias\\.' | cut -c 7- | sort | sed 's/ / = /'"
 
   # From https://github.com/GitAlias/gitalias
   add-alias = "!f() { [ $# = 3 ] && git config $1 alias.\"$2\" \"$3\" && return 0 || echo \"Usage: git add-(local|global)-alias <new alias> <original command>\" >&2 && return 1; }; f"
@@ -67,7 +73,7 @@
   save = stash push
   pop = stash pop
 
-  push-to-all-remotes = !git retmote | xargs -I% -n1 git push %
+  push-to-all-remotes = !git remote | xargs -I% -n1 git push %
 
   # CVS Aliases
   cvs-i = cvsimport -k -a
@@ -77,10 +83,10 @@
   master-cleanse = !git master-cleanse-local; git master-cleanse-remote
 
   # Delete all local branches that have been merged into the local master branch
-  master-cleanse-local = "!git checkout master && git branch --merged | xargs git branch --delete"
+  master-cleanse-local = "!f() { git checkout master && git branch --merged | grep -Ev '(^\\*|master|main)' | xargs git branch -d; }; f"
 
   # Delete all remote branches that have been merged into the remote master branch
-  master-cleanse-remote = !"git branch --remotes --merged origin/master | sed 's# *origin/##' | grep -v '^master$' xargs -I% git push origin :% 2>&1 | grep --colour=never 'deleted'"
+  master-cleanse-remote = !"git branch --remotes --merged origin/master | sed 's# *origin/##' | grep -v '^master$' | xargs -I% git push origin :% 2>&1 | grep --colour=never 'deleted'"
 
   # Expunge a file everywhere; this command is typically for a serious problem,
   # such as accidentially committing a file of sensistive data, such as passwords.
@@ -92,6 +98,10 @@
 
   # Re-sign all commits up to the provided commit hash
   resign = "!re() { git rebase --exec 'git commit --amend --no-edit -n -S' -i $1; }; re"
+
+  # Show logs of unreachable commits.
+  # This can be useful, for example, when recovering contents of dropped stashes or reset commits.
+  show-unreachable = !"git fsck --unreachable | grep commit | cut -d\" \" -f3 | xargs git log"
 
   # List contributors with number of commits
   contributors = shortlog --summary --numbered
@@ -120,48 +130,59 @@
 
   churn = !"f() { git log --all --find-copies --find-renames --name-only --format='format:' \"$@\" | awk 'NF{a[$0]++}END{for(i in a){print a[i], i}}' | sort -rn;};f"
 
-  summary = "!f() { \
-    printf \"Summary of this branch...\n\"; \
-    printf \"%s\n\" $(git rev-parse --abbrev-ref HEAD); \
-    printf \"%s first commit timestamp\n\" $(git log --date-order --format=%cI | tail -1); \
-    printf \"%s latest commit timestamp\n\" $(git log -1 --date-order --format=%cI); \
-    printf \"%d commit count\n\" $(git rev-list --count HEAD); \
-    printf \"%d date count\n\" $(git log --format=oneline --format=\"%ad\" --date=format:\"%Y-%m-%d\" | awk '{a[$0]=1}END{for(i in a){n++;} print n}'); \
-    printf \"%d tag count\n\" $(git tag | wc -l); \
-    printf \"%d author count\n\" $(git log --format=oneline --format=\"%aE\" | awk '{a[$0]=1}END{for(i in a){n++;} print n}'); \
-    printf \"%d committer count\n\" $(git log --format=oneline --format=\"%cE\" | awk '{a[$0]=1}END{for(i in a){n++;} print n}'); \
-    printf \"%d local branch count\n\" $(git branch | grep -v \" -> \" | wc -l); \
-    printf \"%d remote branch count\n\" $(git branch -r | grep -v \" -> \" | wc -l); \
-    printf \"\nSummary of this directory...\n\"; \
-    printf \"%s\n\" $(pwd); \
-    printf \"%d file count via git ls-files\n\" $(git ls-files | wc -l); \
-    printf \"%d file count via find command\n\" $(find . | wc -l); \
-    printf \"%d disk usage\n\" $(du -s | awk '{print $1}'); \
-    printf \"\nMost-active authors, with commit count and %%...\n\"; git log-of-count-and-email | head -7; \
-    printf \"\nMost-active dates, with commit count and %%...\n\"; git log-of-count-and-day | head -7; \
-    printf \"\nMost-active files, with churn count\n\"; git churn | head -7; \
-  }; f"
 [color]
   ui = auto
+
+[color "branch"]
+  current = yellow reverse
+  local = yellow
+  remote = green
+
+[color "diff"]
+  meta = yellow bold
+  frag = magenta bold
+  old = red
+  new = green
+  
+[color "status"]
+  added = yellow
+  changed = green
+  untracked = cyan
+
 [diff]
-  tool = vimdiff3
   renames = copies
+
 [difftool]
   prompt = false
+
 [help]
   autocorrect = 0
+
 [rerere]
   enabled = 1
+
 [rebase]
   autosquash = true
+
 [merge]
-  tool = vimdiff3
-  conflictstyle = diff3
-  prompt = false
   log = true
+  conflictStyle = zdiff3
+  tool = code
+
+[mergetool "code"]
+	cmd = code --wait $MERGED
+
 [branch]
   autosetuprebase = always
+
 [commit]
   gpgsign = true
+
 [pull]
   rebase = true
+
+[init]
+	defaultBranch = master
+
+[url "ssh://git@github.com/"]
+  insteadOf = https://github.com/
