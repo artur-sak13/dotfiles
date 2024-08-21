@@ -32,7 +32,6 @@ export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 export RBENV_ROOT="${HOME}/.rbenv"
 export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
 
-
 export NVM_DIR="${HOME}/.nvm"
 export NVM_LAZY_LOAD=true
 export NVM_COMPLETION=true
@@ -49,6 +48,7 @@ export LANG=en_US.UTF-8
 export BAT_PAGER=""
 
 export CLOUDSDK_PYTHON=/usr/bin/python3
+export FUNCTIONS_CORE_TOOLS_TELEMETRY_OPTOUT=1
 
 if [[ -n "$SSH_CLIENT" ]] || [[ -n "$SSH_TTY" ]]; then
   GPG_TTY=$(tty)

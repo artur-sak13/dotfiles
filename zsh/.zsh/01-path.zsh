@@ -31,8 +31,8 @@ path=(
   "${HOME}/.cargo/bin"
   "${KREW_ROOT:-$HOME/.krew}/bin"
   "${HOME}/.fastlane/bin"
-  "${HOME}/.nvm/versions/node/v12.6.0/bin/npm"
-  "${HOME}/.nvm/versions/node/v12.6.0/bin/node"
+  "${HOME}/.nvm/versions/node/v18.10.0/bin/npm"
+  "${HOME}/.nvm/versions/node/v18.10.0/bin/node"
   "${HOME}/perl5/perlbrew/bin"
   /bin
   /sbin

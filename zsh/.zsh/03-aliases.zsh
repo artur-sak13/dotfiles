@@ -7,8 +7,8 @@ if hash bat 2>/dev/null; then
   alias cat="bat --paging=never"
 fi
 
-if hash exa 2>/dev/null; then
-  alias ls="exa -ahF --color always"
+if hash eza 2>/dev/null; then
+  alias ls="eza -ahF --color always"
 else
   alias ls="ls -ahF --color"
 fi
@@ -92,3 +92,6 @@ alias personal="cd ${PROJECTS}/$(git config user.name)/"
 alias oss="cd ${PROJECTS}/oss/"
 
 alias secure_input_user="ioreg -l -w 0 |  tr ',' '\n' 2&> /dev/null | grep kCGSSessionSecureInputPID | cut -f 2 -d = | uniq | xargs ps -o command= -p"
+
+alias gam="${HOME}/bin/gam/gam"
+alias gam="${HOME}/bin/gamadv-xtd3/gam"

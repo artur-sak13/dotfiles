@@ -1,7 +1,10 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 ###############################################################
 # => Zshrc
 ###############################################################
+
+zmodload zsh/zprof
+
 for config in "${HOME}"/.zsh/*.zsh; do
   # shellcheck source=/dev/null
   source "$config"
@@ -22,16 +25,16 @@ if [ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne $$ ]; then
   fi
 fi
 
+setopt hist_ignore_all_dups
+setopt hist_find_no_dups
+setopt hist_save_no_dups
+
 # shellcheck source=/dev/null
-if [ -f "${HOME}/.nvm/nvm.sh" ]; then . "${HOME}/.nvm/nvm.sh"; fi
+[ -s "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc" ] && \. "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 # shellcheck source=/dev/null
-if [ -f "${HOME}/.iterm2_shell_integration.zsh" ]; then . "${HOME}/.iterm2_shell_integration.zsh"; fi
-# shellcheck source=/dev/null
-if [ -f "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc" ]; then . "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"; fi
-# shellcheck source=/dev/null
-if [ -f "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc" ]; then . "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"; fi
+[ -s "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc" ] && \. "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
 #shellcheck source=/dev/null
-if [ -f "${HOME}/.travis/travis.sh" ]; then . "${HOME}/.travis/travis.sh"; fi
+[ -s "${HOME}/.travis/travis.sh" ] && \. "${HOME}/.travis/travis.sh"
 
 # shellcheck source=/dev/null
 if hash kops 2>/dev/null; then source <(kops completion zsh); fi
@@ -43,15 +46,58 @@ if hash helm 2>/dev/null; then source <(helm completion zsh); fi
 # shellcheck source=/dev/null
 if hash jx 2>/dev/null; then source <(jx completion zsh); fi
 
-if hash pyenv 2>/dev/null; then eval "$(pyenv init -)"; fi
-if hash pyenv 2>/dev/null; then eval "$(pyenv virtualenv-init -)"; fi
-if hash rbenv 2>/dev/null; then eval "$(rbenv init -)"; fi
+# shellcheck source=/dev/null
+source "${HOME}/.bash_completion.d/python-argcomplete.sh"
+# shellcheck source=/dev/null
+source "${HOMEBREW_PREFIX}/share/zsh/site-functions/aws_zsh_completer.sh"
+
+# pyenv() {
+#   set -x
+#   unfunction "$0"
+
+#   _evalcache pyenv init --path
+#   _evalcache pyenv init -
+#   _evalcache pyenv virtualenv-init -
+
+#   $0 "$@"
+# }
+
+# _evalcache pyenv init --path
+# _evalcache pyenv init -
+# _evalcache pyenv virtualenv-init -
+
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+eval "$(gh copilot alias -- zsh)"
+
+rbenv() {
+  unfunction "$0"
+
+  _evalcache rbenv init -
+
+  $0 "$@"
+}
+
+# _evalcache register-python-argcomplete ansible
+# _evalcache register-python-argcomplete ansible-config
+# _evalcache register-python-argcomplete ansible-console
+# _evalcache register-python-argcomplete ansible-doc
+# _evalcache register-python-argcomplete ansible-galaxy
+# _evalcache register-python-argcomplete ansible-inventory
+# _evalcache register-python-argcomplete ansible-playbook
+# _evalcache register-python-argcomplete ansible-pull
+# _evalcache register-python-argcomplete ansible-vault
 
 if ! unset TMOUT >/dev/null 2>&1; then
-  gdb <<EOF >/dev/null 2>&1
- attach $$
- call unbind_variable("TMOUT")
- detach
- quit
+  gdb -n <<EOF >/dev/null 2>&1
+  attach $$
+  call unbind_variable("TMOUT")
+  detach
+  quit
 EOF
 fi
+
+# Load Angular CLI autocompletion.
+source <(ng completion script)
