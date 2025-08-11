@@ -23,7 +23,12 @@ export ZSH_DISABLE_COMPFIX=true
 
 export DOTFILES="${HOME}/dotfiles"
 export PROJECTS="${HOME}/projects"
-export HOMEBREW_PREFIX="/usr/local"
+
+if [[ "$(arch)" == "arm64"]]; then
+  export HOMEBREW_PREFIX="/opt/homebrew"
+else
+  export HOMEBREW_PREFIX="/usr/local"
+fi
 
 export PYENV_ROOT="${HOME}/.pyenv"
 export PYENV_VIRTUALENV_DISABLE_PROMPT=1
