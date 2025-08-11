@@ -6,22 +6,20 @@
 #Oh-My-Zsh Plugins
 # shellcheck disable=SC2034
 plugins=(
-  evalcache
-  zsh-nvm
+  aliases
+  asdf
   hacker-quotes
   base16-shell
   nmap
-  poetry
   zsh-autosuggestions
   fast-syntax-highlighting
-  colored-man-pages
 )
 
 # shellcheck source=/dev/null
 source "${ZSH}/oh-my-zsh.sh"
 
-# shellcheck source=/dev/null
-# source "${HOME}/.zsh/aliases.zsh"
+# prompt off
+eval "$(starship init zsh)"
 
 # shellcheck disable=SC1091
 # shellcheck source=/usr/local
@@ -33,8 +31,8 @@ source "${ZSH}/oh-my-zsh.sh"
 
 # shellcheck disable=SC1091
 # shellcheck source=/Users/artursak/
-[ -s "${HOME}/perl5/perlbrew/etc/bashrc" ] && \. "${HOME}/perl5/perlbrew/etc/bashrc"
+# [ -s "${HOME}/perl5/perlbrew/etc/bashrc" ] && \. "${HOME}/perl5/perlbrew/etc/bashrc"
 
 # shellcheck disable=SC1091
 # shellcheck source=/Users/artursak/
-[ -s "${HOMEBREW_PREFIX}/share/zsh/site-functions/aws_zsh_completer.sh" ] && \. "${HOMEBREW_PREFIX}/share/zsh/site-functions/aws_zsh_completer.sh"
+# [ -s "${HOMEBREW_PREFIX}/share/zsh/site-functions/aws_zsh_completer.sh" ] && \. "${HOMEBREW_PREFIX}/share/zsh/site-functions/aws_zsh_completer.sh"

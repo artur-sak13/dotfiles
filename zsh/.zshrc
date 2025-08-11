@@ -3,7 +3,7 @@
 # => Zshrc
 ###############################################################
 
-zmodload zsh/zprof
+# zmodload zsh/zprof
 
 for config in "${HOME}"/.zsh/*.zsh; do
   # shellcheck source=/dev/null
@@ -30,26 +30,26 @@ setopt hist_find_no_dups
 setopt hist_save_no_dups
 
 # shellcheck source=/dev/null
-[ -s "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc" ] && \. "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
+# [ -s "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc" ] && \. "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 # shellcheck source=/dev/null
-[ -s "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc" ] && \. "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
+# [ -s "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc" ] && \. "${HOMEBREW_PREFIX}/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
 #shellcheck source=/dev/null
-[ -s "${HOME}/.travis/travis.sh" ] && \. "${HOME}/.travis/travis.sh"
+# [ -s "${HOME}/.travis/travis.sh" ] && \. "${HOME}/.travis/travis.sh"
 
 # shellcheck source=/dev/null
-if hash kops 2>/dev/null; then source <(kops completion zsh); fi
+# if hash kops 2>/dev/null; then source <(kops completion zsh); fi
 # shellcheck source=/dev/null
-if hash kubectl 2>/dev/null; then source <(kubectl completion zsh); fi
+# if hash kubectl 2>/dev/null; then source <(kubectl completion zsh); fi
 
 # shellcheck source=/dev/null
-if hash helm 2>/dev/null; then source <(helm completion zsh); fi
+# if hash helm 2>/dev/null; then source <(helm completion zsh); fi
 # shellcheck source=/dev/null
-if hash jx 2>/dev/null; then source <(jx completion zsh); fi
+# if hash jx 2>/dev/null; then source <(jx completion zsh); fi
 
 # shellcheck source=/dev/null
-source "${HOME}/.bash_completion.d/python-argcomplete.sh"
+# source "${HOME}/.bash_completion.d/python-argcomplete.sh"
 # shellcheck source=/dev/null
-source "${HOMEBREW_PREFIX}/share/zsh/site-functions/aws_zsh_completer.sh"
+# source "${HOMEBREW_PREFIX}/share/zsh/site-functions/aws_zsh_completer.sh"
 
 # pyenv() {
 #   set -x
@@ -100,4 +100,5 @@ EOF
 fi
 
 # Load Angular CLI autocompletion.
-source <(ng completion script)
+# source <(ng completion script)
+# zprof

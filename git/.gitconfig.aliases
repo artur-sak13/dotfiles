@@ -1,0 +1,182 @@
+[alias]
+  # Color graph log view
+  graph = log --graph --color --pretty=format:"%C(yellow)%H%C(green)%d%C(reset)%n%x20%cd%n%x20%cn%C(blue)%x20(%ce)%x20%C(cyan)[gpg:%GK%x20%G?]%C(reset)%n%x20%s%n"
+  last = log -1 --stat
+  
+  unstage = reset HEAD --
+  uncommit = reset --soft HEAD~1
+  unadd = reset HEAD
+  
+  cached = diff --cached
+  stat = status -sb
+
+  # Show all commits in a branch that are not in master
+  branch-summary = log --oneline master..HEAD --no-decorate
+
+  # Show verbose output about tags branches or remotes
+  tags = tag -l
+  branches = branch -a
+  remotes = remote -v
+  stashes = stash list
+
+  # Amend the currently staged files to the latest commit
+  amend = commit --amend --reuse-message=HEAD
+
+  # Add all untracked files to .gitignore
+  ignore = "!git status | grep -P \"^\\t\" | grep -vF .gitignore | sed \"s/^\\t//\" >> .gitignore"
+
+  # From trevor bramble https://twitter.com/TrevorBramble/status/774292970681937920
+  alias = !git config -l | grep ^alias | cut -c 7- | sort
+
+  aliases = "!git config --get-regexp '^alias\\.' | cut -c 7- | sort | sed 's/ / = /'"
+
+  # From https://github.com/GitAlias/gitalias
+  add-alias = "!f() { \
+      if [ $# != 3 ]; then \
+        echo \"Usage: git add-alias ( --local | --global ) <alias> <command>\"; \
+        echo \"Error: this command needs 3 arguments.\"; \
+        return 2; \
+      fi; \
+      if [ -n \"$(git config \"$1\" --get alias.\"$2\")\" ]; then \
+          echo \"Alias '$2' already exists, thus no change happened.\"; \
+          return 3; \
+      fi; \
+      git config \"$1\" alias.\"$2\" \"$3\" && \
+      return 0; \
+      echo \"Usage: git add-alias ( --local | --global ) <alias> <command>\"; \
+      echo \"Error: unknown failure.\"; \
+      return 1; \
+  }; f"
+
+  add-global-alias = "!git add-alias --global"
+  add-local-alias = "!git add-alias --local"
+
+  # Track all remote branches that aren't already being tracked
+  track-all-remote-branches = !"f() { git branch -r | grep -v ' -> ' | sed 's/^\\+origin\\///' ; }; f"
+
+  # Discard changes in a (list of) file(s) in the working tree
+  discard = checkout --
+
+  # Clean and discard changes and untracked files in working tree
+  cleanout = !git clean -df && git checkout -- .
+
+  # Blow away all local changes
+  reset-to-pristine = !git reset --hard && git clean -ffdx
+
+  ours = !"f() { git checkout --ours $@ && git add $@; }; f"
+  theirs = !"f() { git checkout --theirs $@ && git add $@; }; f"
+
+  restore = !"f(){ git checkout $(git rev-list -n 1 HEAD -- $1)~1 -- $1; }; f"
+
+  save = stash push
+  pop = stash pop
+
+  push-to-all-remotes = !git remote | xargs -I% -n1 git push %
+
+  # show short diff excluding whitespace changes
+  diff-no-ws = !"f(){ git diff --ignore-space-at-eol -b -w --ignore-blank-lines $@; }; f"
+
+  # Delete all branches that have been merged into the master branch
+  master-cleanse = !"git master-cleanse-local; git master-cleanse-remote"
+
+  # Delete all local branches that have been merged into the local master branch
+  master-cleanse-local = !"f() { git checkout master && git branch --merged | grep -Ev '(^\\*|master|main)' | xargs git branch -d; }; f"
+
+  # Delete all remote branches that have been merged into the remote master branch
+  master-cleanse-remote = !"git branch --remotes --merged origin/master | sed 's# *origin/##' | grep -v '^master$' | xargs -I% git push origin :% 2>&1 | grep --colour=never 'deleted'"
+
+  # Expunge a file everywhere; this command is typically for a serious problem,
+  # such as accidentially committing a file of sensistive data, such as passwords.
+  # After you use command, you will likely need to force push everything.
+  # See https://help.github.com/articles/removing-sensitive-data-from-a-repository/
+  expunge = !"f() { git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch $1\" --prune-empty --tag-name-filter cat -- --all }; f"
+
+  snapshot = !git stash push "snapshot: $(date)" && git stash apply "stash@{0}"
+
+  # Re-sign all commits up to the provided commit hash
+  resign = "!f() { git rebase --exec 'git commit --amend --no-edit -n -S' -i $1; }; f"
+
+  # Rename a branch
+  rename = branch -m
+
+  # Show the last commit short hash
+  last-hash = rev-parse --short HEAD
+
+  # Show logs of unreachable commits.
+  # This can be useful, for example, when recovering contents of dropped stashes or reset commits.
+  show-unreachable = !"git fsck --unreachable | grep commit | cut -d\" \" -f3 | xargs git log"
+
+  # List contributors with number of commits
+  contributors = shortlog --summary --numbered
+
+  up = !git pull origin master && git remote prune origin && git submodule update --init --recursive
+  undo = !git reset HEAD~1 --mixed
+  top = !git log --format=format:%an | sort | uniq -c | sort -r | head -n 20
+
+  # Pull in remote changes for the current repo and all its submodules
+  p = !"git pull; git submodule foreach git pull origin master"
+
+  # Clone a repository including any submodules
+  c = clone --recursive
+
+  # Commit all changes
+  ca = !git add -A && git commit -av
+
+  # Show the diff between the latest commit and the current state
+  d = !"git diff-index --quiet HEAD -- || clear; git --no-pager diff --patch-with-stat"
+
+  # View abbreviated SHA, description, and history graph of latest 20 commits
+  l = log --pretty=oneline -n 20 --graph --abbrev-commit
+
+  # Delete branches the have been merged with master
+  dm = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d; git remote -v update -p"
+
+  churn = !"f() { git log --all --find-copies --find-renames --name-only --format='format:' \"$@\" | awk 'NF{a[$0]++}END{for(i in a){print a[i], i}}' | sort -rn;};f"
+  
+  # summary: print a helpful summary of some typical metrics
+  summary = "!f() { \
+    printf \"Summary of this branch...\n\"; \
+    printf \"%s\n\" \"$(git current-branch)\"; \
+    printf \"%s first commit timestamp\n\" \"$(git log --date-order --format=%cI | tail -1)\"; \
+    printf \"%s last commit timestamp\n\" \"$(git log -1 --date-order --format=%cI)\"; \
+    printf \"\nSummary of counts...\n\"; \
+    printf \"%d commit count\n\" \"$(git rev-list --count HEAD)\"; \
+    printf \"%d date count\n\" \"$(git log --format=oneline --format=\"%ad\" --date=format:\"%Y-%m-%d\" | awk '{a[$0]=1}END{for(i in a){n++;} print n}')\"; \
+    printf \"%d tag count\n\" \"$(git tag | wc -l)\"; \
+    printf \"%d author count\n\" \"$(git log --format=oneline --format=\"%aE\" | awk '{a[$0]=1}END{for(i in a){n++;} print n}')\"; \
+    printf \"%d committer count\n\" \"$(git log --format=oneline --format=\"%cE\" | awk '{a[$0]=1}END{for(i in a){n++;} print n}')\"; \
+    printf \"%d local branch count\n\" \"$(git branch | grep -vc \" -> \")\"; \
+    printf \"%d remote branch count\n\" \"$(git branch --remotes | grep -vc \" -> \")\"; \
+    printf \"\nSummary of this directory...\n\"; \
+    printf \"%s\n\" \"$(pwd)\"; \
+    printf \"%d file count via git ls-files\n\" \"$(git ls-files | wc -l)\"; \
+    printf \"%d file count via find command\n\" \"$(find . | wc -l)\"; \
+    printf \"%d disk usage\n\" \"$(du -s | awk '{print $1}')\"; \
+    printf \"\nMost-active authors, with commit count and %%...\n\"; git log-of-count-and-email | head -7; \
+    printf \"\nMost-active dates, with commit count and %%...\n\"; git log-of-count-and-day | head -7; \
+    printf \"\nMost-active files, with churn count\n\"; git churn | head -7; \
+  }; f"
+
+
+  # Find text in any commit ever.
+  grep-all = "!f() { git rev-list --all | xargs git grep \"$@\"; }; f"
+
+  # Find text and group the output lines. A.k.a. `gg`.
+  grep-group = grep --break --heading --line-number --color
+
+  # Find text with ack-like formatting.
+  grep-ack = "\
+    -c color.grep.linenumber=\"bold yellow\" \
+    -c color.grep.filename=\"bold green\" \
+    -c color.grep.match=\"reverse yellow\" \
+    grep --break --heading --line-number"
+
+  # Initalize a repo and immediately add an empty rebaseable commit.
+  # This initialization makes it easier to do later git rebase commands,
+  # because it enables a rebase to go all the way back to the first commit.
+  init-empty = "!f() { git init && git commit --allow-empty --allow-empty-message --message ''; }; f"
+
+  orphans = fsck --full
+
+  # Show who contributed, in descending order by number of commits
+  who = shortlog --summary --numbered --no-merges

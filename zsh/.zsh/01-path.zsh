@@ -24,6 +24,7 @@ path=(
   "${HOMEBREW_PREFIX}/sbin"
   "${HOMEBREW_PREFIX}/bin"
   "${GOPATH}/bin"
+  "${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
   "${PYENV_ROOT}/bin"
   "${RBENV_ROOT}/bin"
   "${RBENV_ROOT}/shims"

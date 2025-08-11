@@ -17,11 +17,6 @@ brewup() {
   brew upgrade --cask
 }
 
-kalloc() {
-  kubectl get po \
-    --all-namespaces \
-    -o=jsonpath="{range .items[*]}{.metadata.namespace}:{.metadata.name}{'\\n'}{range .spec.containers[*]}  {.name}:{.resources.requests.cpu}{'\\n'}{end}{'\\n'}{end}"
-}
 # nullpointer url shortener
 # source: https://github.com/xero/dotfiles/blob/master/zsh/.zsh/aliases.zsh
 short() {
@@ -116,20 +111,6 @@ up() {
   fi
 }
 
-# Colored man pages
-# source: https://github.com/jessfraz/dotfiles/blob/master/.functions
-man() {
-  env \
-    LESS_TERMCAP_mb="$(printf '\e[01;31m')" \
-    LESS_TERMCAP_md="$(printf '\e[01;38;5;74m')" \
-    LESS_TERMCAP_me="$(printf '\e[0m')" \
-    LESS_TERMCAP_se="$(printf '\e[0m')" \
-    LESS_TERMCAP_so="$(printf '\e[38;33;246m')" \
-    LESS_TERMCAP_ue="$(printf '\e[0m')" \
-    LESS_TERMCAP_us="$(printf '\e[04;38;5;146m')" \
-    man "$@"
-}
-
 # Call from a local repo to open the repository on github/gitlab
 # Modified version of https://github.com/jessfraz/dotfiles/blob/master/.functions
 repo() {
@@ -204,42 +185,9 @@ isup() {
   fi
 }
 
-# Install tiller in Kubernetes cluster and assign it to a service account with cluster-admin privileges
-# From @pczarkowski see full article below
-# https://medium.com/@pczarkowski/easily-install-uninstall-helm-on-rbac-kubernetes-8c3c0e22d0d7
-helmins() {
-  kubectl -n kube-system create serviceaccount tiller
-  kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
-  helm init --service-account=tiller
-}
-
-# Uninstall tiller from Kubernetes cluster
-helmdel() {
-  kubectl -n kube-system delete deployment tiller-deploy
-  kubectl -n kube-system delete svc tiller-deploy
-  kubectl delete clusterrolebinding tiller
-  kubectl -n kube-system delete serviceaccount tiller
-}
-
 # Create new repository in github from the command line
 gitnew() {
   git push --set-upstream git@github.com:artur-sak13/"$(git rev-parse --show-toplevel | xargs basename).git" "$(git rev-parse --abbrev-ref HEAD)"
-}
-
-# Port forward weave scope pod
-weaveproxy() {
-  kubectl port-forward -n weave "$(kubectl get -n weave pod --selector=weave-scope-component=app -o jsonpath='{.items..metadata.name}')" 4040
-}
-
-# Get latest Container Linux HVM ami-id
-coreosver() {
-  local arg=${1:-"us-east-1"}
-  curl -s https://coreos.com/dist/aws/aws-stable.json | jq -r --arg REGION "$arg" '.[ $REGION ].hvm'
-}
-
-# Kill ckb-next daemon to restore dat RGB goodness
-ckbkill() {
-  sudo killall -KILL ckb-next-daemon
 }
 
 # Display only the most useful info when running `dig`

@@ -61,9 +61,6 @@ alias untar='tar -xvf'
 alias hieroglyph="echo -e \"\\033(0\""
 
 if [[ "$OSTYPE" == darwin* ]]; then
-  alias startwm="brew services start chunkwm && brew services start khd"
-  alias restartwm="brew services restart chunkwm && brew services restart khd"
-  alias stopwm="brew services stop chunkwm && brew services stop khd"
 
   alias cleanupDS="sudo find . -type f -name '*.DS_Store' -ls -delete"
   alias cleanupLS="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user && killall Finder"
@@ -85,13 +82,12 @@ alias pubkey="more ~/.ssh/id_rsa.pub | pbcopy | echo '=> Public key copied to pa
 # Pipe private key to clipboard.
 alias privkey="more ~/.ssh/id_rsa | pbcopy | echo '=> Private key copied to pasteboard.'"
 
-alias gam="${HOME}/bin/gamadv-xtd3/gam"
-
 alias work="cd ${PROJECTS}/twopt/"
 alias personal="cd ${PROJECTS}/$(git config user.name)/"
 alias oss="cd ${PROJECTS}/oss/"
 
 alias secure_input_user="ioreg -l -w 0 |  tr ',' '\n' 2&> /dev/null | grep kCGSSessionSecureInputPID | cut -f 2 -d = | uniq | xargs ps -o command= -p"
 
-alias gam="${HOME}/bin/gam/gam"
-alias gam="${HOME}/bin/gamadv-xtd3/gam"
+alias gam="${HOME}/bin/gam7/gam"
+
+alias -g -- --help='--help 2>&1 | bat --language=help --style=plain'

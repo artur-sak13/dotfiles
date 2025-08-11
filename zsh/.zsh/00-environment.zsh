@@ -8,15 +8,14 @@ export ITERM2_SQUELCH_MARK=1
 [ -s "${HOME}/.iterm2_shell_integration.zsh" ] && \. "${HOME}/.iterm2_shell_integration.zsh"
 
 export ZSH="${HOME}/.oh-my-zsh"
-export ZSH_THEME="spaceship"
+# export ZSH_THEME="spaceship"
 
-SPACESHIP_CHAR_PREFIX="%{$(iterm2_prompt_mark)%}"
-export SPACESHIP_CHAR_PREFIX
-export SPACESHIP_CHAR_SYMBOL="Ⓐ"
-export SPACESHIP_CHAR_SUFFIX="  "
-export SPACESHIP_CHAR_COLOR_SUCCESS="cyan"
+# SPACESHIP_CHAR_PREFIX="%{$(iterm2_prompt_mark)%}"
+# export SPACESHIP_CHAR_PREFIX
+# export SPACESHIP_CHAR_SYMBOL="Ⓐ"
+# export SPACESHIP_CHAR_SUFFIX="  "
+# export SPACESHIP_CHAR_COLOR_SUCCESS="cyan"
 
-# export ZSH_THEME="lambda-pure"
 export ZSH_COMPDUMP="${ZDOTDIR:-$HOME}/.zcompdump"
 export ENABLE_CORRECTION=false
 # Turn off insecure completion dir
@@ -45,7 +44,6 @@ export SAM_CLI_TELEMETRY=0
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
-export BAT_PAGER=""
 
 export CLOUDSDK_PYTHON=/usr/bin/python3
 export FUNCTIONS_CORE_TOOLS_TELEMETRY_OPTOUT=1
@@ -54,3 +52,9 @@ if [[ -n "$SSH_CLIENT" ]] || [[ -n "$SSH_TTY" ]]; then
   GPG_TTY=$(tty)
   export GPG_TTY
 fi
+
+export GAMCFGDIR="${HOME}/GAMConfig"
+
+export MANPAGER="zsh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\\x08//g\" | bat -p -l man'"
+
+eval "$(brew shellenv)"
