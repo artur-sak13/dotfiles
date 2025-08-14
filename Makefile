@@ -31,15 +31,11 @@ dotfiles: ## Installs the dotfiles.
 	mkdir -p $(HOME)/.aws/cli;
 
 	ln -snf $(CURDIR)/.aws/cli/alias $(HOME)/.aws/cli/alias;
-	ln -snf $(CURDIR)/zsh/.lambda/lambda-pure.zsh $(HOME)/.oh-my-zsh/custom/themes/lambda-pure.zsh-theme;
 	ln -snf $(CURDIR)/vim/.vim $(HOME)/.vim;
 	ln -snf $(CURDIR)/vim/.vimrc $(HOME)/.vimrc;
 	ln -snf $(HOME)/.vimrc $(HOME)/.config/nvim/init.vim;
 
 	ln -snf $(CURDIR)/starship/starship.toml $(HOME)/.config/starship.toml
-	
-	sudo ln -snf $(CURDIR)/zsh/.lambda/lambda-pure.zsh /usr/local/share/zsh/site-functions/prompt_lambda-pure_setup;
-	sudo ln -snf $(CURDIR)/zsh/.lambda/async.zsh /usr/local/share/zsh/site-functions/async;
 	
 	if [ -f /usr/local/bin/pinentry ]; then \
 		sudo ln -snf /usr/bin/pinentry /usr/local/bin/pinentry; \
