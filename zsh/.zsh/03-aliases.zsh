@@ -22,6 +22,7 @@ alias psusers="ps hax -o user | sort | uniq -c | sort -r"
 
 alias ..="cd .. && ls"
 alias ...="cd ../.. && ls"
+alias -g -- --help='--help 2>&1 | bat --language=help --style=plain'
 
 alias reload='exec ${SHELL} -l'
 alias path='echo ${PATH//:/\\n}'
@@ -73,9 +74,6 @@ if [[ "$OSTYPE" == darwin* ]]; then
   alias lsusb="ioreg -p IOUSB -w0 | sed 's/[^o]*o //; s/@.*$//' | grep -v '^Root.*'"
 fi
 
-alias k="kubectl"
-alias ksys="kubectl -n kube-system"
-
 # Pipe public key to clipboard.
 alias pubkey="more ~/.ssh/id_rsa.pub | pbcopy | echo '=> Public key copied to pasteboard.'"
 
@@ -89,5 +87,3 @@ alias oss="cd ${PROJECTS}/oss/"
 alias secure_input_user="ioreg -l -w 0 |  tr ',' '\n' 2&> /dev/null | grep kCGSSessionSecureInputPID | cut -f 2 -d = | uniq | xargs ps -o command= -p"
 
 alias gam="${HOME}/bin/gam7/gam"
-
-alias -g -- --help='--help 2>&1 | bat --language=help --style=plain'

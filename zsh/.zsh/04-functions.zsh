@@ -198,7 +198,7 @@ digga() {
 
 # Run comprehensive nmap
 total-nmap() {
-  sudo nmap -n -Pn -sSU -pT:0-65535,U:0-65535 -v -A -oX results.xt "$1"
+  sudo nmap -n -Pn -sSU -pT:0-65535,U:0-65535 -v -A -oX results.txt "$1"
 }
 
 # Tar compress with progress bar
@@ -214,10 +214,13 @@ clrz() {
 }
 
 restart_gpgagent() {
-  # shellcheck disable=SC2046
-  kill -9 $(pidof scdaemon) >/dev/null 2>&1
-  # shellcheck disable=SC2046
-  kill -9 $(pidof gpg-agent) >/dev/null 2>&1
+  # Kill scdaemon if running
+  pkill -9 -x scdaemon 2>/dev/null || true
+
+  # Kill gpg-agent if running
+  pkill -9 -x gpg-agent 2>/dev/null || true
+
+  # Restart agent and update TTY
   gpg-connect-agent /bye >/dev/null 2>&1
   gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1
 }
