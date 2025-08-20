@@ -8,7 +8,7 @@ bin: ## Installs the bin directory files.
 	# create symlinks for files in bin
 	for file in $(shell find $(CURDIR)/bin -type f); do \
 		f=$$(basename $$file); \
-		sudo ln -sf $$file /usr/local/bin/$$f; \
+		sudo ln -sf $$file $(HOME)/.local/bin/$$f; \
 	done
 
 .PHONY: dotfiles
@@ -36,7 +36,7 @@ dotfiles: ## Installs the dotfiles.
 	ln -snf $(HOME)/.vimrc $(HOME)/.config/nvim/init.vim;
 
 	ln -snf $(CURDIR)/starship/starship.toml $(HOME)/.config/starship.toml
-	
+
 	if [ -f /usr/local/bin/pinentry ]; then \
 		sudo ln -snf /usr/bin/pinentry /usr/local/bin/pinentry; \
 	fi;
