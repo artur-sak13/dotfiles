@@ -11,188 +11,247 @@ EMAIL=${EMAIL:=$GMAIL}
 PUBLIC_KEY_URL=${PUBLIC_KEY_URL:="hkp://keys.openpgp.org"}
 KEYID=${KEYID:=$GPGKEY}
 SEX=${SEX:=M}
+USB_MOUNT=${USB_MOUNT:="/Volumes/USB"}
 
 if [[ -z "$KEYID" ]]; then
-  echo "Set the KEYID env variable."
-  exit 1
+	echo "Set the KEYID env variable."
+	exit 1
 fi
 
 if [[ -z "$EMAIL" ]]; then
-  echo "Set the EMAIL env variable."
-  exit 1
+	echo "Set the EMAIL env variable."
+	exit 1
+fi
+
+if [[ ! -d "$USB_MOUNT/.gnupg" ]]; then
+	echo "No .gnupg directory found on USB at $USB_MOUNT"
+	exit 1
 fi
 
 restart_agent() {
-  # Restart the gpg agent.
-  # shellcheck disable=SC2046
-  kill -9 $(pidof scdaemon) >/dev/null 2>&1 || true
-  # shellcheck disable=SC2046
-  kill -9 $(pidof gpg-agent) >/dev/null 2>&1 || true
-  gpg-connect-agent /bye >/dev/null 2>&1 || true
-  gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1 || true
+	echo "Restarting gpg-agent..."
+	# Restart the gpg agent.
+	pkill -9 -x scdaemon 2>/dev/null || true
+
+	pkill -9 -x gpg-agent 2>/dev/null || true
+
+	gpg-connect-agent /bye >/dev/null 2>&1 || true
+	gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1 || true
 }
 
 setup_gnupghome() {
-  # Create a temporary directory for GNUPGHOME.
-  GNUPGHOME=$(mktemp -d)
-  export GNUPGHOME
-  echo "Temporary GNUPGHOME is $GNUPGHOME"
-  echo "KeyID is ${KEYID}"
+	# Create a temporary directory for GNUPGHOME.
+	GNUPGHOME=$(mktemp -d)
+	export GNUPGHOME
 
-  # Create the gpg config file.
-  echo "Setting up gpg.conf..."
-  cat <<-EOF >"${GNUPGHOME}/gpg.conf"
-	no-emit-version
-	no-comments
-	keyid-format 0xlong
-	with-fingerprint
-  require-cross-certification
-  no-symkey-cache
-  throw-keyids
-	list-options show-uid-validity
-	verify-options show-uid-validity
-	use-agent
-	charset utf-8
-	fixed-list-mode
-  keyserver keys.openpgp.org
-  keyserver-options no-honor-keyserver-url
-  keyserver-options include-revoked
-	personal-cipher-preferences AES256 AES192 AES
-	personal-digest-preferences SHA512 SHA384 SHA256
-  personal-compress-preferences ZLIB BZIP2 ZIP Uncompressed
-	cert-digest-algo SHA512
-	s2k-cipher-algo AES256
-	s2k-digest-algo SHA512
-	default-preference-list SHA512 SHA384 SHA256 AES256 AES192 AES ZLIB BZIP2 ZIP Uncompressed
-	EOF
+	echo "Temporary GNUPGHOME is $GNUPGHOME"
+	echo "KeyID is ${KEYID}"
 
-  echo "Setting up gpg-agent.conf..."
-  cat <<-EOF >"${GNUPGHOME}/gpg-agent.conf"
-	pinentry-program /usr/local/bin/pinentry-mac
-	enable-ssh-support
-	default-cache-ttl 3600
-  default-cache-ttl-ssh 3600
-	max-cache-ttl 7200
-  max-cache-ttl-ssh 7200
-	use-standard-socket
-  write-env-file $HOME/.gnupg/gpg-agent-info
-	EOF
+	echo "Copying master key from USB..."
+	cp -r "${USB_MOUNT}/.gnupg/"* "${GNUPGHOME}/"
 
-  # Copy master key info to GNUPGHOME.
-  # IMPORTANT: This is here as a stopper for anyone who runs this without reading it,
-  # because it will exit here.
-  # Modify this line to copy from a USB stick or your $HOME directory.
-  echo "Copying master key from USB..."
-  cp gs://misc.j3ss.co/dotfiles/.gnupg/* "${GNUPGHOME}/"
+	if [[ ! -d "${GNUPGHOME}/private-keys-v1.d" ]]; then
+		echo "private-keys-v1.d not found on USB copy"
+		exit 1
+	fi
 
-  # Re-import the secret keys.
-  gpg --import "${GNUPGHOME}/secring.gpg"
+	chmod 700 "${GNUPGHOME}/private-keys-v1.d"
+	chmod 600 "${GNUPGHOME}/private-keys-v1.d/"*
 
-  # Update the default key in the gpg config file.
-  echo "default-key ${KEYID}" >>"${GNUPGHOME}/gpg.conf"
+	# Update the default key in the gpg config file.
+	sed -i "s/^default-key .*/default-key ${KEYID}/" "${GNUPGHOME}/gpg.conf"
 
-  restart_agent
+	restart_agent
 }
 
 validate() {
-  if gpg --with-colons --list-key "$KEYID" | grep -q "No public key"; then
-    echo "I don't know any key called $KEYID"
-    exit 1
-  fi
+	if gpg --with-colons --list-key "$KEYID" | grep -qF "No public key"; then
+		echo "I don't know any key called $KEYID"
+		exit 1
+	fi
 }
 
 generate_subkeys() {
-  echo "Printing local secret keys..."
-  gpg --list-secret-keys
+	echo "Printing local secret keys..."
+	gpg --list-secret-keys
 
-  echo "Generating subkeys..."
+	echo "Generating subkeys..."
 
-  echo "Generating signing subkey..."
-  echo addkey$'\n'4$'\n'$SUBKEY_LENGTH$'\n'"$SUBKEY_EXPIRE"$'\n'save$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --edit-key "$KEYID"
+	echo "Generating signing subkey..."
+	gpg --expert \
+		--batch \
+		--display-charset utf-8 \
+		--command-fd 0 \
+		--edit-key "$KEYID" <<-EOF
+			addkey
+			4
+			$SUBKEY_LENGTH
+			$SUBKEY_EXPIRE
+			save
+		EOF
 
-  echo "Generating encryption subkey..."
-  echo addkey$'\n'6$'\n'$SUBKEY_LENGTH$'\n'"$SUBKEY_EXPIRE"$'\n'save$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --edit-key "$KEYID"
+	echo "Generating encryption subkey..."
+	gpg --expert \
+		--batch \
+		--display-charset utf-8 \
+		--command-fd 0 \
+		--edit-key "$KEYID" <<-EOF
+			addkey
+			6
+			$SUBKEY_LENGTH
+			$SUBKEY_EXPIRE
+			save
+		EOF
 
-  echo "Generating authentication subkey..."
-  echo addkey$'\n'8$'\n'S$'\n'E$'\n'A$'\n'q$'\n'$SUBKEY_LENGTH$'\n'"$SUBKEY_EXPIRE"$'\n'save$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --edit-key "$KEYID"
+	echo "Generating authentication subkey..."
+	gpg --expert \
+		--batch \
+		--display-charset utf-8 \
+		--command-fd 0 \
+		--edit-key "$KEYID" <<-EOF
+			addkey
+			8
+			S
+			E
+			A
+			q
+			$SUBKEY_LENGTH
+			$SUBKEY_EXPIRE
+			save
+		EOF
 
-  echo "Printing local secret keys..."
-  gpg --list-secret-keys
+	echo "Printing local secret keys..."
+	gpg --list-secret-keys
 }
 
 move_keys_to_card() {
-  echo "Moving signing subkey to card..."
-  echo "key 2"$'\n'keytocard$'\n'1$'\n'y$'\n'save$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --edit-key "$KEYID"
+	echo "Moving subkeys to smarcard by fingerprint..."
+	# List subkeys with their capabilities and fingerprints.
+	mapfile -t subkeys < <(gpg --list-secret-keys --with-subkey-fingerprint --with-colons "$KEYID" |
+		awk -F: '/^sub/{cap=$12} /^fpr/{print cap ":" $10}')
 
-  echo "key 3"$'\n'keytocard$'\n'2$'\n'y$'\n'save$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --edit-key "$KEYID"
+	declare -A slots
+	# Define slots for each capability.
+	# s = signing, e = encryption, a = authentication
+	slots=([s]=1 [e]=2 [a]=3)
 
-  echo "key 4"$'\n'keytocard$'\n'3$'\n'y$'\n'save$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --edit-key "$KEYID"
+	for key in "${subkeys[@]}"; do
+		capabilities=${key%%:*}
+		fingerprint=${key##*:}
 
-  echo "Printing card status..."
-  gpg --card-status
+		for capability in s e a; do
+			if [[ "$capabilities" == *"$capability"* && -n "${slots[$capability]}" ]]; then
+				slot=${slots[$capability]}
+
+				echo "Moving subkey $fingerprint(cap $capability) to slot $slot"
+
+				gpg --expert \
+					--batch \
+					--yes \
+					--display-charset utf-8 \
+					--command-fd 0 \
+					--edit-key "$KEYID" <<-EOF
+						key $fingerprint
+						keytocard
+						$slot
+						y
+						save
+					EOF
+
+				# Prevent mapping the same slot twice.
+				unset 'slots[$capability]'
+			fi
+		done
+	done
+
+	echo "Printing card status..."
+	gpg --card-status
 }
 
 update_cardinfo() {
-  # Edit the smart card name and info values.
-  echo "Updating card holder name..."
-  echo admin$'\n'name$'\n'$SURNAME$'\n'$GIVENNAME$'\n'quit$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --card-edit
+	# Edit the smart card name and info values.
+	echo "Updating card holder name..."
+	gpg --expert \
+		--batch \
+		--display-charset utf-8 \
+		--command-fd 0 \
+		--card-edit <<-EOF
+			admin
+			name
+			$SURNAME
+			$GIVENNAME
+			quit
+		EOF
 
-  echo "Updating card language..."
-  echo admin$'\n'lang$'\n'en$'\n'quit$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --card-edit
+	echo "Updating card language..."
+	gpg --expert \
+		--batch \
+		--display-charset utf-8 \
+		--command-fd 0 \
+		--card-edit <<-EOF
+			admin
+			lang
+			en
+			quit
+		EOF
 
-  echo "Updating card login..."
-  echo admin$'\n'login$'\n'"$EMAIL"$'\n'quit$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --card-edit
+	echo "Updating card login..."
+	gpg --expert \
+		--batch \
+		--display-charset utf-8 \
+		--command-fd 0 \
+		--card-edit <<-EOF
+			admin
+			login
+			$EMAIL
+			quit
+		EOF
 
-  echo "Updating card public key url..."
-  echo admin$'\n'url$'\n'$PUBLIC_KEY_URL$'\n'quit$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --card-edit
+	echo "Updating card public key url..."
+	gpg --expert \
+		--batch \
+		--display-charset utf-8 \
+		--command-fd 0 \
+		--card-edit <<-EOF
+			admin
+			url
+			$PUBLIC_KEY_URL
+			quit
+		EOF
 
-  echo "Updating card sex..."
-  echo admin$'\n'sex$'\n'$SEX$'\n'quit$'\n' |
-    gpg --expert --batch --display-charset utf-8 \
-      --command-fd 0 --card-edit
+	echo "Updating card sex..."
+	gpg --expert \
+		--batch \
+		--display-charset utf-8 \
+		--command-fd 0 \
+		--card-edit <<-EOF
+			admin
+			sex
+			$SEX
+			quit
+		EOF
 }
 
 finalize() {
-  echo "Printing card status..."
-  gpg --card-status
+	echo "Printing card status..."
+	gpg --card-status
 
-  echo
-  echo "Printing local secret keys..."
-  gpg --list-secret-keys
+	echo
+	echo "Printing local secret keys..."
+	gpg --list-secret-keys
 
-  echo
-  echo "Temporary GNUPGHOME is $GNUPGHOME"
+	echo
+	echo "Temporary GNUPGHOME is $GNUPGHOME"
+	gpg --armor --export "$KEYID" >"${HOME}/pubkey.txt"
 
-  gpg --armor --export "$KEYID" >"${HOME}/pubkey.txt"
+	echo
+	echo "Public key is ${HOME}/pubkey.txt"
+	echo "You should upload it to a public key server"
 
-  echo
-  echo "Public key is ${HOME}/pubkey.txt"
-  echo "You should upload it to a public key server"
-
-  echo
-  echo "Printing ssh key..."
-  restart_agent
-  ssh-add -L
+	restart_agent
+	echo
+	echo "SSH keys available via agent:"
+	ssh-add -L
 }
 
 setup_gnupghome
