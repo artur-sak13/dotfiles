@@ -6,26 +6,18 @@ ERRORS=()
 
 # find all executables and run `shellcheck`
 for f in $(find . -type f -not -iwholename '*.git*' -not -iwholename '*.vim*' | sort -u); do
-  if file "$f" | grep --quiet shell; then
-    {
-      shellcheck "$f" && echo -e "\\033[32m[OK]\\033[0m: successfully linted $f"
-    } || {
-      ERRORS+=("$f")
-    }
-  fi
-done
-
-for f in $(find . -name '*.vim' ! -name '.vim' ! -path '*undo*' ! -path '*autoload*' ! -path '*plugged*' ! -path '*.config*' | sort -u); do
-  {
-    vint "$f" && echo -e "\\033[32m[OK]\\033[0m: sucessfully linted vim script $f"
-  } || {
-    ERRORS+=("$f")
-  }
+	if file "$f" | grep --quiet shell; then
+		{
+			shellcheck "$f" && echo -e "\\033[32m[OK]\\033[0m: successfully linted $f"
+		} || {
+			ERRORS+=("$f")
+		}
+	fi
 done
 
 if [ ${#ERRORS[@]} -eq 0 ]; then
-  echo "No errors"
+	echo "No errors"
 else
-  echo "These files failed shellcheck: ${ERRORS[*]}"
-  exit 1
+	echo "These files failed shellcheck: ${ERRORS[*]}"
+	exit 1
 fi
