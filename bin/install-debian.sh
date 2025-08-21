@@ -203,17 +203,7 @@ setup_sudo() {
 # install oh-my-zsh
 install_oh_my_zsh() {
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-	local user="$USER"
-	chsh -s /bin/zsh "${user}"
-
-	local plugins=(oldratlee/hacker-quotes zsh-users/zsh-autosuggestions zdharma/fast-syntax-highlighting)
-
-	for plugin in "${plugins[@]}"; do
-		repo=$(basename "$plugin")
-		if [[ ! -d "${HOME}/.oh-my-zsh/custom/plugins/${repo}" ]]; then
-			git clone "https://github.com/${plugin}" "${HOME}/.oh-my-zsh/custom/plugins/${repo}"
-		fi
-	done
+	chsh -s /bin/zsh "$USER"
 }
 
 # install tmux
@@ -255,9 +245,9 @@ install_golang() {
 	(
 		kernel=$(uname -s | tr '[:upper:]' '[:lower:]')
 		curl -sSL "https://storage.googleapis.com/golang/go${GO_VERSION}.${kernel}-amd64.tar.gz" | sudo tar -v -C /usr/local -xz
-		local user="$USER"
+
 		# rebuild stdlib for faster builds
-		sudo chown -R "${user}" /usr/local/go/pkg
+		sudo chown -R "$USER" /usr/local/go/pkg
 		CGO_ENABLED=0 go install -a -installsuffix cgo std
 	)
 
@@ -295,8 +285,6 @@ get_dotfiles() {
 
 		sudo systemctl enable systemd-networkd systemd-resolved
 		sudo systemctl start systemd-networkd systemd-resolved
-
-		cd "$HOME"
 	)
 }
 
