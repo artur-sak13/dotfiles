@@ -1,7 +1,7 @@
 # Dotfiles
 
-[![Travis CI](https://img.shields.io/travis/artur-sak13/dotfiles.svg?style=for-the-badge)](https://travis-ci.org/artur-sak13/dotfiles)
-[![Codacy](https://img.shields.io/codacy/grade/ef0eff7cf3de45d78d065b90504892f5.svg?style=for-the-badge)](https://app.codacy.com/app/artur-sak13/dotfiles)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/artur-sak13/dotfiles/ci.yml?style=for-the-badge)
+
 
 ## Getting Started
 
@@ -21,8 +21,3 @@ need to install anything.
 ```console
 make test
 ```
-
-## Acknowledgements
-
-Inspired by [@jessfraz's](https://github.com/jessfraz/dotfiles) dotfiles
-because she's awesome and her dotfiles are friggin immaculate.
