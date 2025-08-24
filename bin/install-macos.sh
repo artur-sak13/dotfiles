@@ -8,13 +8,10 @@ install_rust() {
 	curl https://sh.rustup.rs -sSf | sh
 }
 
-install_rosetta() {
-	softwareupdate --install-rosetta --agree-to-license
-}
-
 # install homebrew
 install_homebrew() {
 	ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
 	# Disable Homebrew analytics
 	brew analytics off
 	brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
@@ -42,12 +39,20 @@ get_dotfiles() {
 # install oh-my-zsh
 install_oh_my_zsh() {
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-	
+
 	chsh -s /bin/zsh "${USER}"
 }
 
+install_all() {
+	install_homebrew
+	install_oh_my_zsh
+	get_dotfiles
+	install_perlbrew
+	install_rust
+}
+
 usage() {
-	echo -e "install-macos.sh\\n\\tThis script installs my setup on macOS based systems.\\n"
+	echo -e "install-macos.sh\\n\\tThis script installs my setup on macOS.\\n"
 	echo "Usage:"
 	echo "  dotfiles                             - get dotfiles"
 	echo "  homebrew                            - install homebrew and packages"
@@ -59,16 +64,37 @@ usage() {
 main() {
 	local cmd=$1
 
-	if [[ -z "$cmd" ]]; then
+	case $cmd in
+	homebrew)
+		install_homebrew
+		;;
+
+	oh-my-zsh)
+		install_oh_my_zsh
+		;;
+
+	dotfiles)
+		get_dotfiles
+		;;
+
+	perlbrew)
+		install_perlbrew
+		;;
+
+	rust)
+		install_rust
+		;;
+
+	all)
+		install_all
+		;;
+
+	*)
+		echo "Unknown command: $cmd"
 		usage
 		exit 1
-	fi
-	install_rosetta
-	install_homebrew
-	install_oh_my_zsh
-	get_dotfiles
-	install_perlbrew
-	install_rust
+		;;
+	esac
 }
 
 main "$@"
