@@ -1,29 +1,79 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+log() { printf '[macos] %s\n' "$*"; }
+warn() { printf '[macos][warn] %s\n' "$*" >&2; }
+error() { printf '[macos][error] %s\n' "$*" >&2; }
+
+KEEPALIVE_PID=""
+keep_sudo_alive() {
+  # Ask for the admin password upfront
+  sudo -v
+
+  # Keep-alive: update existing `sudo` time stamp until .macos has finished
+
+  (while true; do
+    sudo -n true
+    sleep 60
+  done) &
+  KEEPALIVE_PID=$!
+}
+
+cleanup() {
+  if [[ -n "${KEEPALIVE_PID:-}" ]] && kill -0 "${KEEPALIVE_PID}" 2>/dev/null; then
+    kill "${KEEPALIVE_PID}" || true
+  fi
+}
+trap cleanup EXIT
+trap 'error "Command failed: $BASH_COMMAND"; exit 1' ERR
+
+# Sanitize LocalHostName (Bonjour): ASCII alnum and hyphen only
+sanitize_bonjour_name() {
+  tr -cd 'A-Za-z0-9-' <<<"$1"
+}
+
 ###############################################################################
 # General UI/UX                                                               #
 ###############################################################################
 configure_ui() {
-  local desired_host_name=$1
+  local desired_host_name="${1:-}"
+
+  log "Configuring UI/UX..."
 
   # Enable dark mode
   defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
 
-  # Set computer name (as done via System Preferences → Sharing)
-  sudo scutil --set LocalHostName "${desired_host_name}"
-  # Hostname and ComputerName should contain .local in the name to avoid name resolution issues.
-  sudo scutil --set HostName "${desired_host_name}.local"
-  sudo scutil --set ComputerName "${desired_host_name}.local"
-  sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "${desired_host_name}"
+  # Set computer names (Sharing). Only if provided.
+  if [[ -n "${desired_host_name}" ]]; then
+    local bonjour_name
+    bonjour_name="$(sanitize_bonjour_name "${desired_host_name}")"
 
-  # Disable the crash reporter
-  #defaults write com.apple.CrashReporter DialogType -string "none"
+    if [[ -z "${bonjour_name}" ]]; then
+      warn "Provided hostname sanitized to empty; skipping LocalHostName."
+    else
+      if [[ "${bonjour_name}" != "${desired_host_name}" ]]; then
+        warn "Sanitized LocalHostName to '${bonjour_name}' (from '${desired_host_name}')."
+      fi
+
+      sudo scutil --set LocalHostName "${bonjour_name}"
+      sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "${bonjour_name}"
+    fi
+
+    # ComputerName: user-visible name; do not append .local
+    sudo scutil --set ComputerName "${desired_host_name}"
+
+    # HostName: set only if an FQDN and not ending with .local
+    if [[ "${desired_host_name}" == *.* && "${desired_host_name}" != *.local ]]; then
+      sudo scutil --set HostName "${desired_host_name}"
+    else
+      warn "Skipping HostName (not an FQDN or ends with .local)."
+    fi
+  fi
 
   # Save to disk (not to iCloud) by default
   defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 
-  # Increase window resize speed for Cocoa applications
+  # Increase window resize speed
   defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
 
   # Expand save/print panels by default
@@ -43,40 +93,43 @@ configure_ui() {
   sudo systemsetup -setrestartfreeze on
 
   # Don't sleep
-  sudo systemsetup -setcomputersleep Off >/dev/null
+  sudo systemsetup -setcomputersleep Never >/dev/null
 
   # Automatically quit printer app once the print jobs complete
   defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
 
   # Remove duplicates in the “Open With” menu
-  /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user
+  /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+    -kill -r -domain local -domain system -domain user
 
-  # Disable automatic capitalization
+  # Disable automatic capitalization/dashes/periods/quotes/correct
   defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
-
-  # Disable smart dashes
   defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
-
-  # Disable automatic period substitution
   defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
-
-  # Disable smart quotes
   defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
-
-  # Disable auto-correct
   defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+
+  # Always show scrollbars
+  defaults write NSGlobalDomain AppleShowScrollBars -string "Always"
 }
 
 ###############################################################################
 # Input Devices                                                               #
 ###############################################################################
 configure_input() {
+  log "Configuring input devices..."
+
   # Disable press-and-hold for keys in favor of key repeat
   defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 
-  # Fast key repeat
+  # Fast key repeat (aggressive)
   defaults write NSGlobalDomain KeyRepeat -int 1
   defaults write NSGlobalDomain InitialKeyRepeat -int 10
+
+  # Trackpad: enable tap to click
+  defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+  defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
+  defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 
   # Set the timezone; see `sudo systemsetup -listtimezones` for other values
   sudo systemsetup -settimezone "America/Chicago" >/dev/null
@@ -86,28 +139,30 @@ configure_input() {
 # Screen                                                                      #
 ###############################################################################
 configure_screen() {
+  log "Configuring screen and screenshots..."
+
   # Require password immediately after sleep
   defaults write com.apple.screensaver askForPassword -int 1
   defaults write com.apple.screensaver askForPasswordDelay -int 0
 
-  # Save screenshots to the desktop
-  defaults write com.apple.screencapture location -string "${HOME}/Desktop"
+  # Save screenshots to ~/Screenshots (create if missing)
+  local screenshots_dir="${HOME}/Screenshots"
+  mkdir -p "${screenshots_dir}"
+  defaults write com.apple.screencapture location -string "${screenshots_dir}"
 
   # Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)
   defaults write com.apple.screencapture type -string "png"
 
   # Disable shadow in screenshots
   defaults write com.apple.screencapture disable-shadow -bool true
-
-  # Enable subpixel font rendering on non-Apple LCDs
-  # Reference: https://github.com/kevinSuttle/macOS-Defaults/issues/17#issuecomment-266633501
-  defaults write NSGlobalDomain AppleFontSmoothing -int 1
 }
 
 ###############################################################################
 # Terminal                                                       #
 ###############################################################################
 configure_terminal() {
+  log "Configuring Terminal…"
+
   # Only use UTF-8 in Terminal.app
   defaults write com.apple.terminal StringEncodings -array 4
 }
@@ -116,16 +171,16 @@ configure_terminal() {
 # Finder                                                                      #
 ###############################################################################
 configure_finder() {
+  log "Configuring Finder…"
+
   # Show hidden files by default
   defaults write com.apple.finder AppleShowAllFiles -bool true
 
   # Show all filename extensions
   defaults write NSGlobalDomain AppleShowAllExtensions -bool true
 
-  # Show status bar
+  # Show status and path bars
   defaults write com.apple.finder ShowStatusBar -bool true
-
-  # Show path bar
   defaults write com.apple.finder ShowPathbar -bool true
 
   # Display full POSIX path as Finder window title
@@ -133,20 +188,16 @@ configure_finder() {
 
   # Keep folders on top when sorting by name
   defaults write com.apple.finder _FXSortFoldersFirst -bool true
-
-  # Do the same for the desktop
   defaults write com.apple.finder _FXSortFoldersFirstOnDesktop -bool true
 
-  # When performing a search, search the current folder by default
+  # Search the current folder by default
   defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
 
   # Disable the warning when changing a file extension
   defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
 
-  # Enable spring loading for directories
+  # Enable spring loading for directories (no delay)
   defaults write NSGlobalDomain com.apple.springing.enabled -bool true
-
-  # Remove the spring loading delay for directories
   defaults write NSGlobalDomain com.apple.springing.delay -float 0
 
   # Avoid creating .DS_Store files on network or USB volumes
@@ -162,14 +213,18 @@ configure_finder() {
   # Four-letter codes for the other view modes: `icnv`, `clmv`, `Flwv`
   defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 
+  # New Finder windows show: Home
+  defaults write com.apple.finder NewWindowTarget -string "PfHm"
+  defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
+
   # Disable the warning before emptying the Trash
   defaults write com.apple.finder WarnOnEmptyTrash -bool false
 
   # Show the ~/Library folder
-  chflags nohidden ~/Library
+  chflags nohidden ~/Library || true
 
   # Show the /Volumes folder
-  sudo chflags nohidden /Volumes
+  sudo chflags nohidden /Volumes || true
 
   # Expand the following File Info panes:
   # “General”, “Open with”, and “Sharing & Permissions”
@@ -177,14 +232,15 @@ configure_finder() {
     General -bool true \
     OpenWith -bool true \
     Privileges -bool true
-
 }
 
 ###############################################################################
 # Dock, Mission Control, and hot corners                                      #
 ###############################################################################
 configure_dock() {
-  # Enable highlight hover effect for the grid view of a stack (Dock)
+  log "Configuring Dock and Mission Control…"
+
+  # Enable highlight hover effect for stacks
   defaults write com.apple.dock mouse-over-hilite-stack -bool true
 
   # Enable spring loading for all Dock items
@@ -202,7 +258,13 @@ configure_dock() {
   # Disable displaying recent applications in Dock
   defaults write com.apple.dock show-recents -bool false
 
-  # Reset Launchpad, but keep the desktop wallpaper intact
+  # Dock autohide and speed tweaks
+  defaults write com.apple.dock autohide -bool true
+  defaults write com.apple.dock autohide-delay -float 0
+  defaults write com.apple.dock autohide-time-modifier -float 0.15
+  defaults write com.apple.dock tilesize -int 36
+
+  # Reset Launchpad DB, but keep the desktop wallpaper intact
   if [[ -d "${HOME}/Library/Application Support/Dock" ]]; then
     find "${HOME}/Library/Application Support/Dock" -name "*-*.db" -maxdepth 1 -delete
   fi
@@ -212,45 +274,42 @@ configure_dock() {
 # Safari & WebKit                                                             #
 ###############################################################################
 configure_safari() {
+  log "Configuring Safari…"
+
   # Privacy: don’t send search queries to Apple
   defaults write com.apple.Safari UniversalSearchEnabled -bool false
   defaults write com.apple.Safari SuppressSearchSuggestions -bool true
 
-  # Press Tab to highlight each item on a web page
+  # Press Tab to highlight elements on a web page
   defaults write com.apple.Safari WebKitTabToLinksPreferenceKey -bool true
   defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2TabsToLinks -bool true
 
   # Show the full URL in the address bar (note: this still hides the scheme)
   defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
 
-  # Set Safari’s home page to `about:blank` for faster loading
+  # Set home page to `about:blank` for faster loading
   defaults write com.apple.Safari HomePage -string "about:blank"
 
   # Prevent Safari from opening ‘safe’ files automatically after downloading
   defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
 
-  # Hide Safari’s bookmarks bar by default
+  # Hide bookmarks bar by default
   defaults write com.apple.Safari ShowFavoritesBar -bool false
 
-  # Hide Safari’s sidebar in Top Sites
+  # Hide Top Sites sidebar
   defaults write com.apple.Safari ShowSidebarInTopSites -bool false
 
-  # Enable Safari’s debug menu
+  # Enable debug and develop menus
   defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-
-  # Make Safari’s search banners default to Contains instead of Starts With
-  defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
-
-  # Remove useless icons from Safari’s bookmarks bar
-  defaults write com.apple.Safari ProxiesInBookmarksBar -array
-
-  # Enable the Develop menu and the Web Inspector in Safari
   defaults write com.apple.Safari IncludeDevelopMenu -bool true
   defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
   defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
 
   # Add a context menu item for showing the Web Inspector in web views
   defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
+
+  # Make Safari’s search banners default to Contains instead of Starts With
+  defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
 
   # Enable continuous spellchecking
   defaults write com.apple.Safari WebContinuousSpellCheckingEnabled -bool true
@@ -264,20 +323,9 @@ configure_safari() {
   # Warn about fraudulent websites
   defaults write com.apple.Safari WarnAboutFraudulentWebsites -bool true
 
-  # Disable plug-ins
-  defaults write com.apple.Safari WebKitPluginsEnabled -bool false
-  defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2PluginsEnabled -bool false
-
-  # Disable Java
-  defaults write com.apple.Safari WebKitJavaEnabled -bool false
-  defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaEnabled -bool false
-
   # Block pop-up windows
   defaults write com.apple.Safari WebKitJavaScriptCanOpenWindowsAutomatically -bool false
   defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically -bool false
-
-  # Enable “Do Not Track”
-  defaults write com.apple.Safari SendDoNotTrackHTTPHeader -bool true
 
   # Update extensions automatically
   defaults write com.apple.Safari InstallExtensionUpdatesAutomatically -bool true
@@ -287,6 +335,8 @@ configure_safari() {
 # Mail                                                                        #
 ###############################################################################
 configure_mail() {
+  log "Configuring Mail…"
+
   # Copy email addresses as `foo@example.com` instead of `Foo Bar <foo@example.com>` in Mail.app
   defaults write com.apple.mail AddressesIncludeNameOnPasteboard -bool false
 
@@ -306,6 +356,8 @@ configure_mail() {
 # Spotlight                                                                   #
 ###############################################################################
 configure_spotlight() {
+  log "Configuring Spotlight (reindexing)…"
+
   defaults write com.apple.spotlight orderedItems -array \
     '{"enabled" = 1;"name" = "APPLICATIONS";}' \
     '{"enabled" = 1;"name" = "SYSTEM_PREFS";}' \
@@ -333,10 +385,8 @@ configure_spotlight() {
   # Load new settings before rebuilding the index
   killall mds >/dev/null 2>&1
 
-  # Make sure indexing is enabled for the main volume
+  # Make sure indexing is enabled and rebuild for the main volume
   sudo mdutil -i on / >/dev/null
-
-  # Rebuild the index from scratch
   sudo mdutil -E / >/dev/null
 }
 
@@ -344,6 +394,8 @@ configure_spotlight() {
 # Activity Monitor                                                            #
 ###############################################################################
 configure_activity_monitor() {
+  log "Configuring Activity Monitor…"
+
   # Show the main window when launching Activity Monitor
   defaults write com.apple.ActivityMonitor OpenMainWindow -bool true
 
@@ -362,6 +414,7 @@ configure_activity_monitor() {
 # TextEdit                                                                    #
 ###############################################################################
 configure_textedit() {
+  log "Configuring TextEdit…"
   # Use plain text mode for new TextEdit documents
   defaults write com.apple.TextEdit RichText -int 0
 
@@ -374,6 +427,8 @@ configure_textedit() {
 # Mac App Store                                                               #
 ###############################################################################
 configure_app_store() {
+  log "Configuring App Store and Software Update…"
+
   # Enable the WebKit Developer Tools in the Mac App Store
   defaults write com.apple.appstore WebKitDeveloperExtras -bool true
 
@@ -403,55 +458,108 @@ configure_app_store() {
 # Photos                                                                      #
 ###############################################################################
 configure_photos() {
+  log "Configuring Photos…"
+
   # Prevent Photos from opening automatically when devices are plugged in
   defaults -currentHost write com.apple.ImageCapture disableHotPlug -bool true
+}
+
+ensure_xcode_clt() {
+  log "Checking Xcode Command Line Tools…"
+
+  if ! xcode-select -p >/dev/null 2>&1; then
+    warn "Xcode Command Line Tools not found. Attempting to start installer…"
+
+    xcode-select --install >/dev/null 2>&1 || true
+
+    warn "If a dialog appeared, complete installation, then re-run this script."
+  fi
+}
+
+ensure_rosetta() {
+  if [[ "$(uname -m)" == "arm64" ]]; then
+    log "Ensuring Rosetta 2 is installed (Apple Silicon)…"
+
+    if ! /usr/bin/pgrep oahd >/dev/null 2>&1; then
+      sudo softwareupdate --install-rosetta --agree-to-license || warn "Rosetta install may have been skipped."
+    fi
+  fi
 }
 
 ###############################################################################
 # Kill affected applications                                                  #
 ###############################################################################
 killall_affected_apps() {
-  for app in "Activity Monitor" \
-    "Calendar" \
-    "cfprefsd" \
-    "Contacts" \
-    "Dock" \
-    "Finder" \
-    "Mail" \
-    "Messages" \
-    "Photos" \
-    "Safari" \
-    "SystemUIServer" \
-    "Terminal"; do
-    killall "${app}" &>/dev/null
+  log "Restarting affected applications…"
+
+  local apps=(
+    "Activity Monitor"
+    "Calendar"
+    "cfprefsd"
+    "Contacts"
+    "Dock"
+    "Finder"
+    "Mail"
+    "Messages"
+    "Photos"
+    "Safari"
+    "SystemUIServer"
+  )
+
+  for app in "${apps[@]}"; do
+    killall "${app}" &>/dev/null || true
   done
 }
 
+print_usage() {
+  cat <<EOF
+Usage: $(basename "$0") [--hostname NAME]
+
+One-time macOS setup script. Options:
+  --hostname NAME   Set ComputerName/LocalHostName (HostName only if FQDN)
+  -h, --help        Show this help and exit
+EOF
+}
+
 main() {
-  local desired_host_name=$1
+  local desired_host_name=""
 
-  if [[ -z "$desired_host_name" ]]; then
-    echo "Usage: $0 <desired-host-name>"
-    exit 1
-  fi
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --hostname)
+      shift
 
-  # Run the macOS setup
-  echo "Running macOS setup..."
+      desired_host_name="${1:-}"
+
+      [[ -n "${desired_host_name}" ]] || {
+        error "--hostname requires a value"
+        exit 1
+      }
+      ;;
+
+    -h | --help)
+      print_usage
+      exit 0
+      ;;
+
+    *)
+      error "Unknown argument: $1"
+      print_usage
+      exit 1
+      ;;
+    esac
+
+    shift || true
+  done
+
+  log "Closing System Settings/Preferences…"
 
   # Close any open System Settings/Preferences panes, to prevent them from overriding
   # settings we're about to change
   osascript -e 'tell application "System Settings" to quit' >/dev/null 2>&1 || true
   osascript -e 'tell application "System Preferences" to quit' >/dev/null 2>&1 || true
 
-  # Ask for the admin password upfront
-  sudo -v
-
-  # Keep-alive: update existing `sudo` time stamp until .macos has finished
-  while true; do
-    sudo -n true
-    sleep 60
-    kill -0 "$$" || exit
-  done 2>/dev/null &
+  log "Running macOS initial setup…"
 
   configure_ui "${desired_host_name}"
   configure_input
@@ -466,9 +574,13 @@ main() {
   configure_textedit
   configure_app_store
   configure_photos
+
+  ensure_xcode_clt
+  ensure_rosetta
+
   killall_affected_apps
 
-  echo "Done. Note that some of these changes require a logout/restart to take effect."
+  log "Done. Some changes require a logout/restart to take effect."
 }
 
 main "$@"
