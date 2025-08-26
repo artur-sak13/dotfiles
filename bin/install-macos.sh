@@ -14,7 +14,7 @@ install_homebrew() {
 
 	# Disable Homebrew analytics
 	brew analytics off
-	brew bundle install --file="${HOME}/dotfiles/.brew/Brewfile"
+	brew bundle install --file="${HOME}/dotfiles/brew/Brewfile"
 }
 
 install_perlbrew() {
