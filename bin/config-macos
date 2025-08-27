@@ -11,11 +11,13 @@ keep_sudo_alive() {
   sudo -v
 
   # Keep-alive: update existing `sudo` time stamp until .macos has finished
+  (
+    while true; do
+      sudo -n true
+      sleep 60
+    done
+  ) &
 
-  (while true; do
-    sudo -n true
-    sleep 60
-  done) &
   KEEPALIVE_PID=$!
 }
 
@@ -24,6 +26,7 @@ cleanup() {
     kill "${KEEPALIVE_PID}" || true
   fi
 }
+
 trap cleanup EXIT
 trap 'error "Command failed: $BASH_COMMAND"; exit 1' ERR
 
