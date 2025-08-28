@@ -45,7 +45,7 @@ safe_defaults_write() {
   local err
 
   if ! err="$(defaults write "$domain" "${@:2}" 2>&1 >/dev/null)"; then
-    warn "defaults write ${domain} ${*:2} -> ${err} (skipping)"
+    warn "defaults write ${domain} ${*:2}\n -> ${err}"
   fi
 }
 
@@ -616,6 +616,9 @@ main() {
   osascript -e 'tell application "System Settings" to quit' >/dev/null 2>&1 || true
   osascript -e 'tell application "System Preferences" to quit' >/dev/null 2>&1 || true
 
+  ensure_xcode_clt
+  ensure_rosetta
+
   configure_ui "$DESIRED_HOSTNAME"
   configure_input
   configure_screen
@@ -624,14 +627,11 @@ main() {
   configure_dock
   configure_safari
   configure_mail
-  configure_spotlight
   configure_activity_monitor
   configure_textedit
   configure_app_store
   configure_photos
-
-  ensure_xcode_clt
-  ensure_rosetta
+  configure_spotlight
 
   killall_affected_apps
 
