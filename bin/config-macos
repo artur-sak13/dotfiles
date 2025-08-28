@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-log() { printf '[macos] %s\n' "$*"; }
-warn() { printf '[macos][warn] %s\n' "$*" >&2; }
-error() { printf '[macos][error] %s\n' "$*" >&2; }
+# -----------------------------------------------------------------------------
+# Logging utilities
+# -----------------------------------------------------------------------------
+log() { printf '[%s][config-macos] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
+warn() { printf '[%s][config-macos][WARN] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >&2; }
+error() { printf '[%s][config-macos][ERROR] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >&2; }
 
+DESIRED_HOSTNAME=""
 KEEPALIVE_PID=""
+
 keep_sudo_alive() {
   # Ask for the admin password upfront
   sudo -v
@@ -17,7 +22,6 @@ keep_sudo_alive() {
       sleep 60
     done
   ) &
-
   KEEPALIVE_PID=$!
 }
 
@@ -38,9 +42,63 @@ sanitize_bonjour_name() {
 # Write defaults but don't abort the script on failure
 safe_defaults_write() {
   local domain="$1"
-  if ! defaults write "$domain" "${@:2}" >/dev/null 2>&1; then
-    warn "safe_defaults_write ${domain} ${*:2} failed (skipping)"
+  local err
+
+  if ! err="$(defaults write "$domain" "${@:2}" 2>&1 >/dev/null)"; then
+    warn "defaults write ${domain} ${*:2} -> ${err} (skipping)"
   fi
+}
+
+# Ensure a sandboxed app's container exists so defaults can write
+ensure_app_container() {
+  local domain="$1"
+  local app="$2"
+  local container="${HOME}/Library/Containers/${domain}"
+
+  if [[ ! -d "$container" ]]; then
+    warn "${app} hasn't been launched yet. Launching to create its container…"
+
+    if open -ga "$app" >/dev/null 2>&1; then
+      for _ in {1..20}; do
+        [[ -d "$container" ]] && break
+        sleep 0.5
+      done
+
+      osascript -e "quit app \"${app}\"" >/dev/null 2>&1 || true
+
+      [[ -d "$container" ]] || warn "Container for ${app} still missing; prefs may fail to write."
+    else
+      warn "Could not launch ${app}; preferences may not be writable."
+    fi
+  fi
+}
+
+###############################################################################
+# Kill affected applications                                                  #
+###############################################################################
+killall_affected_apps() {
+  log "Restarting affected applications…"
+
+  local apps=(
+    "Activity Monitor"
+    "Calendar"
+    "cfprefsd"
+    "Contacts"
+    "Dock"
+    "Finder"
+    "Mail"
+    "Messages"
+    "Photos"
+    "Safari"
+    "SystemUIServer"
+  )
+
+  for app in "${apps[@]}"; do
+    killall "$app" &>/dev/null || true
+
+    # Give slow apps time to quit
+    sleep 0.2
+  done
 }
 
 ###############################################################################
@@ -284,13 +342,7 @@ configure_dock() {
 configure_safari() {
   log "Configuring Safari…"
 
-  # Ensure Safari's container exists (launch once) so defaults can write
-  if [[ ! -d "${HOME}/Library/Containers/com.apple.Safari" ]]; then
-    warn "Safari hasn't been launched yet. Launching once to create its container…"
-    open -ga "Safari" >/dev/null 2>&1 && sleep 2 &&
-      osascript -e 'quit app "Safari"' >/dev/null 2>&1 ||
-      warn "Could not initialize Safari; some preferences may not be writable."
-  fi
+  ensure_app_container "com.apple.Safari" "Safari"
 
   # Privacy: don’t send search queries to Apple
   safe_defaults_write com.apple.Safari UniversalSearchEnabled -bool false
@@ -353,6 +405,8 @@ configure_safari() {
 configure_mail() {
   log "Configuring Mail…"
 
+  ensure_app_container "com.apple.mail" "Mail"
+
   # Copy email addresses as `foo@example.com` instead of `Foo Bar <foo@example.com>` in Mail.app
   safe_defaults_write com.apple.mail AddressesIncludeNameOnPasteboard -bool false
 
@@ -374,7 +428,7 @@ configure_mail() {
 configure_spotlight() {
   log "Configuring Spotlight (reindexing)…"
 
-  safe_defaults_write com.apple.spotlight orderedItems -array \
+  safe_defaults_write com.apple.Spotlight orderedItems -array \
     '{"enabled" = 1;"name" = "APPLICATIONS";}' \
     '{"enabled" = 1;"name" = "SYSTEM_PREFS";}' \
     '{"enabled" = 1;"name" = "DIRECTORIES";}' \
@@ -412,6 +466,8 @@ configure_spotlight() {
 configure_activity_monitor() {
   log "Configuring Activity Monitor…"
 
+  ensure_app_container "com.apple.ActivityMonitor" "Activity Monitor"
+
   # Show the main window when launching Activity Monitor
   safe_defaults_write com.apple.ActivityMonitor OpenMainWindow -bool true
 
@@ -431,6 +487,9 @@ configure_activity_monitor() {
 ###############################################################################
 configure_textedit() {
   log "Configuring TextEdit…"
+
+  ensure_app_container "com.apple.TextEdit" "TextEdit"
+
   # Use plain text mode for new TextEdit documents
   safe_defaults_write com.apple.TextEdit RichText -int 0
 
@@ -468,6 +527,9 @@ configure_app_store() {
 
   # Allow the App Store to reboot machine on macOS updates
   safe_defaults_write com.apple.commerce AutoUpdateRestartRequired -bool true
+
+  sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true || true
+  sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate AutomaticDownload -int 1 || true
 }
 
 ###############################################################################
@@ -502,52 +564,15 @@ ensure_rosetta() {
   fi
 }
 
-###############################################################################
-# Kill affected applications                                                  #
-###############################################################################
-killall_affected_apps() {
-  log "Restarting affected applications…"
-
-  local apps=(
-    "Activity Monitor"
-    "Calendar"
-    "cfprefsd"
-    "Contacts"
-    "Dock"
-    "Finder"
-    "Mail"
-    "Messages"
-    "Photos"
-    "Safari"
-    "SystemUIServer"
-  )
-
-  for app in "${apps[@]}"; do
-    killall "${app}" &>/dev/null || true
-  done
-}
-
-print_usage() {
-  cat <<EOF
-Usage: $(basename "$0") [--hostname NAME]
-
-One-time macOS setup script. Options:
-  --hostname NAME   Set ComputerName/LocalHostName (HostName only if FQDN)
-  -h, --help        Show this help and exit
-EOF
-}
-
-main() {
-  local desired_host_name=""
-
+parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
     --hostname)
       shift
 
-      desired_host_name="${1:-}"
+      DESIRED_HOSTNAME="${1:-}"
 
-      [[ -n "${desired_host_name}" ]] || {
+      [[ -n "$DESIRED_HOSTNAME" ]] || {
         error "--hostname requires a value"
         exit 1
       }
@@ -567,17 +592,31 @@ main() {
 
     shift || true
   done
+}
 
-  log "Closing System Settings/Preferences…"
+print_usage() {
+  cat <<EOF
+Usage: $(basename "$0") [--hostname NAME]
+
+One-time macOS setup script. Options:
+  --hostname NAME   Set ComputerName/LocalHostName (HostName only if FQDN)
+  -h, --help        Show this help and exit
+EOF
+}
+
+main() {
+  parse_args "$@"
+
+  log "Starting macOS initial setup…"
+  keep_sudo_alive
 
   # Close any open System Settings/Preferences panes, to prevent them from overriding
   # settings we're about to change
+  log "Closing System Settings/Preferences…"
   osascript -e 'tell application "System Settings" to quit' >/dev/null 2>&1 || true
   osascript -e 'tell application "System Preferences" to quit' >/dev/null 2>&1 || true
 
-  log "Running macOS initial setup…"
-
-  configure_ui "${desired_host_name}"
+  configure_ui "$DESIRED_HOSTNAME"
   configure_input
   configure_screen
   configure_terminal
