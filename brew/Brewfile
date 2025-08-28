@@ -115,8 +115,6 @@ brew "zsh"
 brew "azure/functions/azure-functions-core-tools@4"
 brew "hashicorp/tap/terraform"
 brew "linuxkit/linuxkit/linuxkit", args: ["HEAD"]
-brew "microsoft/mssql-release/msodbcsql18"
-brew "microsoft/mssql-release/mssql-tools18"
 cask "appcleaner"
 cask "goreleaser"
 cask "clickup"
