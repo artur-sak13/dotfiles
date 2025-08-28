@@ -35,6 +35,14 @@ sanitize_bonjour_name() {
   tr -cd 'A-Za-z0-9-' <<<"$1"
 }
 
+# Write defaults but don't abort the script on failure
+safe_defaults_write() {
+  local domain="$1"
+  if ! defaults write "$domain" "${@:2}" >/dev/null 2>&1; then
+    warn "safe_defaults_write ${domain} ${*:2} failed (skipping)"
+  fi
+}
+
 ###############################################################################
 # General UI/UX                                                               #
 ###############################################################################
@@ -44,7 +52,7 @@ configure_ui() {
   log "Configuring UI/UX..."
 
   # Enable dark mode
-  defaults write NSGlobalDomain AppleInterfaceStyle -string "Dark"
+  safe_defaults_write NSGlobalDomain AppleInterfaceStyle -string "Dark"
 
   # Set computer names (Sharing). Only if provided.
   if [[ -n "${desired_host_name}" ]]; then
@@ -74,46 +82,46 @@ configure_ui() {
   fi
 
   # Save to disk (not to iCloud) by default
-  defaults write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
+  safe_defaults_write NSGlobalDomain NSDocumentSaveNewDocumentsToCloud -bool false
 
   # Increase window resize speed
-  defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
+  safe_defaults_write NSGlobalDomain NSWindowResizeTime -float 0.001
 
   # Expand save/print panels by default
-  defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
-  defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
-  defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
-  defaults write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
+  safe_defaults_write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+  safe_defaults_write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
+  safe_defaults_write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
+  safe_defaults_write NSGlobalDomain PMPrintingExpandedStateForPrint2 -bool true
 
   # Enable the “Are you sure you want to open this application?” dialog
-  defaults write com.apple.LaunchServices LSQuarantine -bool true
+  safe_defaults_write com.apple.LaunchServices LSQuarantine -bool true
 
   # Reveal IP address, hostname, OS version, etc. when clicking the clock
   # in the login window
   sudo defaults write /Library/Preferences/com.apple.loginwindow AdminHostInfo HostName
 
-  # Restart automatically if the computer freezes
-  sudo systemsetup -setrestartfreeze on
-
-  # Don't sleep
-  sudo systemsetup -setcomputersleep Never >/dev/null
+  if command -v pmset >/dev/null 2>&1; then
+    sudo pmset -a sleep 0 || warn "Failed to disable computer sleep with pmset."
+  else
+    sudo systemsetup -setcomputersleep Never >/dev/null 2>&1 || warn "Failed to disable computer sleep."
+  fi
 
   # Automatically quit printer app once the print jobs complete
-  defaults write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
+  safe_defaults_write com.apple.print.PrintingPrefs "Quit When Finished" -bool true
 
   # Remove duplicates in the “Open With” menu
   /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
     -kill -r -domain local -domain system -domain user
 
   # Disable automatic capitalization/dashes/periods/quotes/correct
-  defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
-  defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
-  defaults write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
-  defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
-  defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+  safe_defaults_write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+  safe_defaults_write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
+  safe_defaults_write NSGlobalDomain NSAutomaticPeriodSubstitutionEnabled -bool false
+  safe_defaults_write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+  safe_defaults_write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 
   # Always show scrollbars
-  defaults write NSGlobalDomain AppleShowScrollBars -string "Always"
+  safe_defaults_write NSGlobalDomain AppleShowScrollBars -string "Always"
 }
 
 ###############################################################################
@@ -123,19 +131,16 @@ configure_input() {
   log "Configuring input devices..."
 
   # Disable press-and-hold for keys in favor of key repeat
-  defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+  safe_defaults_write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 
   # Fast key repeat (aggressive)
-  defaults write NSGlobalDomain KeyRepeat -int 1
-  defaults write NSGlobalDomain InitialKeyRepeat -int 10
+  safe_defaults_write NSGlobalDomain KeyRepeat -int 1
+  safe_defaults_write NSGlobalDomain InitialKeyRepeat -int 10
 
   # Trackpad: enable tap to click
-  defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+  safe_defaults_write com.apple.AppleMultitouchTrackpad Clicking -bool true
   defaults -currentHost write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
-  defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
-
-  # Set the timezone; see `sudo systemsetup -listtimezones` for other values
-  sudo systemsetup -settimezone "America/Chicago" >/dev/null
+  safe_defaults_write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 }
 
 ###############################################################################
@@ -145,19 +150,19 @@ configure_screen() {
   log "Configuring screen and screenshots..."
 
   # Require password immediately after sleep
-  defaults write com.apple.screensaver askForPassword -int 1
-  defaults write com.apple.screensaver askForPasswordDelay -int 0
+  safe_defaults_write com.apple.screensaver askForPassword -int 1
+  safe_defaults_write com.apple.screensaver askForPasswordDelay -int 0
 
   # Save screenshots to ~/Screenshots (create if missing)
   local screenshots_dir="${HOME}/Screenshots"
   mkdir -p "${screenshots_dir}"
-  defaults write com.apple.screencapture location -string "${screenshots_dir}"
+  safe_defaults_write com.apple.screencapture location -string "${screenshots_dir}"
 
   # Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)
-  defaults write com.apple.screencapture type -string "png"
+  safe_defaults_write com.apple.screencapture type -string "png"
 
   # Disable shadow in screenshots
-  defaults write com.apple.screencapture disable-shadow -bool true
+  safe_defaults_write com.apple.screencapture disable-shadow -bool true
 }
 
 ###############################################################################
@@ -167,7 +172,7 @@ configure_terminal() {
   log "Configuring Terminal…"
 
   # Only use UTF-8 in Terminal.app
-  defaults write com.apple.terminal StringEncodings -array 4
+  safe_defaults_write com.apple.terminal StringEncodings -array 4
 }
 
 ###############################################################################
@@ -177,51 +182,51 @@ configure_finder() {
   log "Configuring Finder…"
 
   # Show hidden files by default
-  defaults write com.apple.finder AppleShowAllFiles -bool true
+  safe_defaults_write com.apple.finder AppleShowAllFiles -bool true
 
   # Show all filename extensions
-  defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+  safe_defaults_write NSGlobalDomain AppleShowAllExtensions -bool true
 
   # Show status and path bars
-  defaults write com.apple.finder ShowStatusBar -bool true
-  defaults write com.apple.finder ShowPathbar -bool true
+  safe_defaults_write com.apple.finder ShowStatusBar -bool true
+  safe_defaults_write com.apple.finder ShowPathbar -bool true
 
   # Display full POSIX path as Finder window title
-  defaults write com.apple.finder _FXShowPosixPathInTitle -bool true
+  safe_defaults_write com.apple.finder _FXShowPosixPathInTitle -bool true
 
   # Keep folders on top when sorting by name
-  defaults write com.apple.finder _FXSortFoldersFirst -bool true
-  defaults write com.apple.finder _FXSortFoldersFirstOnDesktop -bool true
+  safe_defaults_write com.apple.finder _FXSortFoldersFirst -bool true
+  safe_defaults_write com.apple.finder _FXSortFoldersFirstOnDesktop -bool true
 
   # Search the current folder by default
-  defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
+  safe_defaults_write com.apple.finder FXDefaultSearchScope -string "SCcf"
 
   # Disable the warning when changing a file extension
-  defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+  safe_defaults_write com.apple.finder FXEnableExtensionChangeWarning -bool false
 
   # Enable spring loading for directories (no delay)
-  defaults write NSGlobalDomain com.apple.springing.enabled -bool true
-  defaults write NSGlobalDomain com.apple.springing.delay -float 0
+  safe_defaults_write NSGlobalDomain com.apple.springing.enabled -bool true
+  safe_defaults_write NSGlobalDomain com.apple.springing.delay -float 0
 
   # Avoid creating .DS_Store files on network or USB volumes
-  defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
-  defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
+  safe_defaults_write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+  safe_defaults_write com.apple.desktopservices DSDontWriteUSBStores -bool true
 
   # Automatically open a new Finder window when a volume is mounted
-  defaults write com.apple.frameworks.diskimages auto-open-ro-root -bool true
-  defaults write com.apple.frameworks.diskimages auto-open-rw-root -bool true
-  defaults write com.apple.finder OpenWindowForNewRemovableDisk -bool true
+  safe_defaults_write com.apple.frameworks.diskimages auto-open-ro-root -bool true
+  safe_defaults_write com.apple.frameworks.diskimages auto-open-rw-root -bool true
+  safe_defaults_write com.apple.finder OpenWindowForNewRemovableDisk -bool true
 
   # Use list view in all Finder windows by default
   # Four-letter codes for the other view modes: `icnv`, `clmv`, `Flwv`
-  defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+  safe_defaults_write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 
   # New Finder windows show: Home
-  defaults write com.apple.finder NewWindowTarget -string "PfHm"
-  defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
+  safe_defaults_write com.apple.finder NewWindowTarget -string "PfHm"
+  safe_defaults_write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
 
   # Disable the warning before emptying the Trash
-  defaults write com.apple.finder WarnOnEmptyTrash -bool false
+  safe_defaults_write com.apple.finder WarnOnEmptyTrash -bool false
 
   # Show the ~/Library folder
   chflags nohidden ~/Library || true
@@ -231,7 +236,7 @@ configure_finder() {
 
   # Expand the following File Info panes:
   # “General”, “Open with”, and “Sharing & Permissions”
-  defaults write com.apple.finder FXInfoPanesExpanded -dict \
+  safe_defaults_write com.apple.finder FXInfoPanesExpanded -dict \
     General -bool true \
     OpenWith -bool true \
     Privileges -bool true
@@ -244,28 +249,28 @@ configure_dock() {
   log "Configuring Dock and Mission Control…"
 
   # Enable highlight hover effect for stacks
-  defaults write com.apple.dock mouse-over-hilite-stack -bool true
+  safe_defaults_write com.apple.dock mouse-over-hilite-stack -bool true
 
   # Enable spring loading for all Dock items
-  defaults write com.apple.dock enable-spring-load-actions-on-all-items -bool true
+  safe_defaults_write com.apple.dock enable-spring-load-actions-on-all-items -bool true
 
   # Show indicator lights for open applications in the Dock
-  defaults write com.apple.dock show-process-indicators -bool true
+  safe_defaults_write com.apple.dock show-process-indicators -bool true
 
   # Speed up Mission Control animations
-  defaults write com.apple.dock expose-animation-duration -float 0.1
+  safe_defaults_write com.apple.dock expose-animation-duration -float 0.1
 
   # Don't rearrange Spaces based on most recent use
-  defaults write com.apple.dock mru-spaces -bool false
+  safe_defaults_write com.apple.dock mru-spaces -bool false
 
   # Disable displaying recent applications in Dock
-  defaults write com.apple.dock show-recents -bool false
+  safe_defaults_write com.apple.dock show-recents -bool false
 
   # Dock autohide and speed tweaks
-  defaults write com.apple.dock autohide -bool true
-  defaults write com.apple.dock autohide-delay -float 0
-  defaults write com.apple.dock autohide-time-modifier -float 0.15
-  defaults write com.apple.dock tilesize -int 36
+  safe_defaults_write com.apple.dock autohide -bool true
+  safe_defaults_write com.apple.dock autohide-delay -float 0
+  safe_defaults_write com.apple.dock autohide-time-modifier -float 0.15
+  safe_defaults_write com.apple.dock tilesize -int 36
 
   # Reset Launchpad DB, but keep the desktop wallpaper intact
   if [[ -d "${HOME}/Library/Application Support/Dock" ]]; then
@@ -279,59 +284,67 @@ configure_dock() {
 configure_safari() {
   log "Configuring Safari…"
 
+  # Ensure Safari's container exists (launch once) so defaults can write
+  if [[ ! -d "${HOME}/Library/Containers/com.apple.Safari" ]]; then
+    warn "Safari hasn't been launched yet. Launching once to create its container…"
+    open -ga "Safari" >/dev/null 2>&1 && sleep 2 &&
+      osascript -e 'quit app "Safari"' >/dev/null 2>&1 ||
+      warn "Could not initialize Safari; some preferences may not be writable."
+  fi
+
   # Privacy: don’t send search queries to Apple
-  defaults write com.apple.Safari UniversalSearchEnabled -bool false
-  defaults write com.apple.Safari SuppressSearchSuggestions -bool true
+  safe_defaults_write com.apple.Safari UniversalSearchEnabled -bool false
+  safe_defaults_write com.apple.Safari SuppressSearchSuggestions -bool true
 
   # Press Tab to highlight elements on a web page
-  defaults write com.apple.Safari WebKitTabToLinksPreferenceKey -bool true
-  defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2TabsToLinks -bool true
+  safe_defaults_write com.apple.Safari WebKitTabToLinksPreferenceKey -bool true
+  safe_defaults_write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2TabsToLinks -bool true
 
   # Show the full URL in the address bar (note: this still hides the scheme)
-  defaults write com.apple.Safari ShowFullURLInSmartSearchField -bool true
+  safe_defaults_write com.apple.Safari ShowFullURLInSmartSearchField -bool true
 
   # Set home page to `about:blank` for faster loading
-  defaults write com.apple.Safari HomePage -string "about:blank"
+  safe_defaults_write com.apple.Safari HomePage -string "about:blank"
 
   # Prevent Safari from opening ‘safe’ files automatically after downloading
-  defaults write com.apple.Safari AutoOpenSafeDownloads -bool false
+  safe_defaults_write com.apple.Safari AutoOpenSafeDownloads -bool false
 
   # Hide bookmarks bar by default
-  defaults write com.apple.Safari ShowFavoritesBar -bool false
+  safe_defaults_write com.apple.Safari ShowFavoritesBar -bool false
 
   # Hide Top Sites sidebar
-  defaults write com.apple.Safari ShowSidebarInTopSites -bool false
+  safe_defaults_write com.apple.Safari ShowSidebarInTopSites -bool false
 
   # Enable debug and develop menus
-  defaults write com.apple.Safari IncludeInternalDebugMenu -bool true
-  defaults write com.apple.Safari IncludeDevelopMenu -bool true
-  defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
-  defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
+  safe_defaults_write com.apple.Safari IncludeInternalDebugMenu -bool true
+  safe_defaults_write com.apple.Safari IncludeDevelopMenu -bool true
+  safe_defaults_write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+  safe_defaults_write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled -bool true
 
   # Add a context menu item for showing the Web Inspector in web views
-  defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
+  safe_defaults_write NSGlobalDomain WebKitDeveloperExtras -bool true
 
   # Make Safari’s search banners default to Contains instead of Starts With
-  defaults write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
+  safe_defaults_write com.apple.Safari FindOnPageMatchesWordStartsOnly -bool false
 
   # Enable continuous spellchecking
-  defaults write com.apple.Safari WebContinuousSpellCheckingEnabled -bool true
+  safe_defaults_write com.apple.Safari WebContinuousSpellCheckingEnabled -bool true
 
   # Disable AutoFill
-  defaults write com.apple.Safari AutoFillFromAddressBook -bool false
-  defaults write com.apple.Safari AutoFillPasswords -bool false
-  defaults write com.apple.Safari AutoFillCreditCardData -bool false
-  defaults write com.apple.Safari AutoFillMiscellaneousForms -bool false
+  safe_defaults_write com.apple.Safari AutoFillFromAddressBook -bool false
+  safe_defaults_write com.apple.Safari AutoFillPasswords -bool false
+  safe_defaults_write com.apple.Safari AutoFillCreditCardData -bool false
+  safe_defaults_write com.apple.Safari AutoFillMiscellaneousForms -bool false
 
   # Warn about fraudulent websites
-  defaults write com.apple.Safari WarnAboutFraudulentWebsites -bool true
+  safe_defaults_write com.apple.Safari WarnAboutFraudulentWebsites -bool true
 
   # Block pop-up windows
-  defaults write com.apple.Safari WebKitJavaScriptCanOpenWindowsAutomatically -bool false
-  defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically -bool false
+  safe_defaults_write com.apple.Safari WebKitJavaScriptCanOpenWindowsAutomatically -bool false
+  safe_defaults_write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebKit2JavaScriptCanOpenWindowsAutomatically -bool false
 
   # Update extensions automatically
-  defaults write com.apple.Safari InstallExtensionUpdatesAutomatically -bool true
+  safe_defaults_write com.apple.Safari InstallExtensionUpdatesAutomatically -bool true
 }
 
 ###############################################################################
@@ -341,18 +354,18 @@ configure_mail() {
   log "Configuring Mail…"
 
   # Copy email addresses as `foo@example.com` instead of `Foo Bar <foo@example.com>` in Mail.app
-  defaults write com.apple.mail AddressesIncludeNameOnPasteboard -bool false
+  safe_defaults_write com.apple.mail AddressesIncludeNameOnPasteboard -bool false
 
   # Add the keyboard shortcut ⌘ + Enter to send an email in Mail.app
-  defaults write com.apple.mail NSUserKeyEquivalents -dict-add "Send" "@\\U21a9"
+  safe_defaults_write com.apple.mail NSUserKeyEquivalents -dict-add "Send" "@\\U21a9"
 
   # Display emails in threaded mode, sorted by date (oldest at the top)
-  defaults write com.apple.mail DraftsViewerAttributes -dict-add "DisplayInThreadedMode" -string "yes"
-  defaults write com.apple.mail DraftsViewerAttributes -dict-add "SortedDescending" -string "yes"
-  defaults write com.apple.mail DraftsViewerAttributes -dict-add "SortOrder" -string "received-date"
+  safe_defaults_write com.apple.mail DraftsViewerAttributes -dict-add "DisplayInThreadedMode" -string "yes"
+  safe_defaults_write com.apple.mail DraftsViewerAttributes -dict-add "SortedDescending" -string "yes"
+  safe_defaults_write com.apple.mail DraftsViewerAttributes -dict-add "SortOrder" -string "received-date"
 
   # Disable inline attachments (just show the icons)
-  defaults write com.apple.mail DisableInlineAttachmentViewing -bool true
+  safe_defaults_write com.apple.mail DisableInlineAttachmentViewing -bool true
 }
 
 ###############################################################################
@@ -361,7 +374,7 @@ configure_mail() {
 configure_spotlight() {
   log "Configuring Spotlight (reindexing)…"
 
-  defaults write com.apple.spotlight orderedItems -array \
+  safe_defaults_write com.apple.spotlight orderedItems -array \
     '{"enabled" = 1;"name" = "APPLICATIONS";}' \
     '{"enabled" = 1;"name" = "SYSTEM_PREFS";}' \
     '{"enabled" = 1;"name" = "DIRECTORIES";}' \
@@ -400,17 +413,17 @@ configure_activity_monitor() {
   log "Configuring Activity Monitor…"
 
   # Show the main window when launching Activity Monitor
-  defaults write com.apple.ActivityMonitor OpenMainWindow -bool true
+  safe_defaults_write com.apple.ActivityMonitor OpenMainWindow -bool true
 
   # Visualize CPU usage in the Activity Monitor Dock icon
-  defaults write com.apple.ActivityMonitor IconType -int 5
+  safe_defaults_write com.apple.ActivityMonitor IconType -int 5
 
   # Show all processes in Activity Monitor
-  defaults write com.apple.ActivityMonitor ShowCategory -int 0
+  safe_defaults_write com.apple.ActivityMonitor ShowCategory -int 0
 
   # Sort Activity Monitor results by CPU usage
-  defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
-  defaults write com.apple.ActivityMonitor SortDirection -int 0
+  safe_defaults_write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
+  safe_defaults_write com.apple.ActivityMonitor SortDirection -int 0
 }
 
 ###############################################################################
@@ -419,11 +432,11 @@ configure_activity_monitor() {
 configure_textedit() {
   log "Configuring TextEdit…"
   # Use plain text mode for new TextEdit documents
-  defaults write com.apple.TextEdit RichText -int 0
+  safe_defaults_write com.apple.TextEdit RichText -int 0
 
   # Open and save files as UTF-8 in TextEdit
-  defaults write com.apple.TextEdit PlainTextEncoding -int 4
-  defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
+  safe_defaults_write com.apple.TextEdit PlainTextEncoding -int 4
+  safe_defaults_write com.apple.TextEdit PlainTextEncodingForWrite -int 4
 }
 
 ###############################################################################
@@ -433,28 +446,28 @@ configure_app_store() {
   log "Configuring App Store and Software Update…"
 
   # Enable the WebKit Developer Tools in the Mac App Store
-  defaults write com.apple.appstore WebKitDeveloperExtras -bool true
+  safe_defaults_write com.apple.appstore WebKitDeveloperExtras -bool true
 
   # Enable Debug Menu in the Mac App Store
-  defaults write com.apple.appstore ShowDebugMenu -bool true
+  safe_defaults_write com.apple.appstore ShowDebugMenu -bool true
 
   # Enable the automatic update check
-  defaults write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
+  safe_defaults_write com.apple.SoftwareUpdate AutomaticCheckEnabled -bool true
 
   # Check for software updates daily, not just once per week
-  defaults write com.apple.SoftwareUpdate ScheduleFrequency -int 1
+  safe_defaults_write com.apple.SoftwareUpdate ScheduleFrequency -int 1
 
   # Download newly available updates in background
-  defaults write com.apple.SoftwareUpdate AutomaticDownload -int 1
+  safe_defaults_write com.apple.SoftwareUpdate AutomaticDownload -int 1
 
   # Install System data files & security updates
-  defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -int 1
+  safe_defaults_write com.apple.SoftwareUpdate CriticalUpdateInstall -int 1
 
   # Turn on app auto-update
-  defaults write com.apple.commerce AutoUpdate -bool true
+  safe_defaults_write com.apple.commerce AutoUpdate -bool true
 
   # Allow the App Store to reboot machine on macOS updates
-  defaults write com.apple.commerce AutoUpdateRestartRequired -bool true
+  safe_defaults_write com.apple.commerce AutoUpdateRestartRequired -bool true
 }
 
 ###############################################################################
