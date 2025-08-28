@@ -40,7 +40,11 @@ get_dotfiles() {
 install_oh_my_zsh() {
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
-	chsh -s /bin/zsh "${USER}"
+	if ! grep -qx "$(which zsh)" /etc/shells; then
+		sudo sh -c "echo $(which zsh) >> /etc/shells"
+	fi
+
+	chsh -s "$(which zsh)" "$USER"
 }
 
 install_all() {
