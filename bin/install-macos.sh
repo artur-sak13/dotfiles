@@ -10,7 +10,7 @@ install_rust() {
 
 # install homebrew
 install_homebrew() {
-	ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+	curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash
 
 	# Disable Homebrew analytics
 	brew analytics off
