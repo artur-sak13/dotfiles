@@ -8,7 +8,6 @@
 plugins=(
   aliases
   asdf
-  base16-shell
   nmap
 )
 

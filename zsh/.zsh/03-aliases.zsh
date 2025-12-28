@@ -29,7 +29,7 @@ alias path='echo ${PATH//:/\\n}'
 
 alias grep='grep --color=auto '
 
-# Enable aliases to be sudo’ed
+# Enable aliases to be sudo-ed
 alias sudo='sudo '
 alias ssh="gpg-connect-agent updatestartuptty /bye >/dev/null; ssh"
 

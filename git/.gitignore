@@ -53,5 +53,5 @@ node_modules
 .sass-cache
 
 .uuid
-.gnupg
+.gnupg/*
 !.gnupg/gpg*.conf

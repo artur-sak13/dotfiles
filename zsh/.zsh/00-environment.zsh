@@ -17,12 +17,6 @@ export ZSH_DISABLE_COMPFIX=true
 export DOTFILES="${HOME}/dotfiles"
 export PROJECTS="${HOME}/projects"
 
-if [[ "$(arch)" == "arm64" ]]; then
-  export HOMEBREW_PREFIX="/opt/homebrew"
-else
-  export HOMEBREW_PREFIX="/usr/local"
-fi
-
 export EDITOR="${HOMEBREW_PREFIX}/bin/nvim"
 
 export AWS_PROFILE=default

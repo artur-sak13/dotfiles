@@ -5,6 +5,8 @@
 
 # shellcheck disable=SC2034
 path=(
+  "${HOME}/.antigravity/antigravity/bin"
+  "${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
   "${HOMEBREW_PREFIX}/opt/libiodbc/bin"
   "${HOMEBREW_PREFIX}/opt/coreutils/libexec/gnubin"
   "${HOMEBREW_PREFIX}/opt/findutils/libexec/gnubin"
@@ -19,7 +21,6 @@ path=(
   "${HOMEBREW_PREFIX}/sbin"
   "${HOMEBREW_PREFIX}/bin"
   "${GOBIN}"
-  "${ASDF_DATA_DIR:-$HOME/.asdf}/shims"
   "${HOME}/.local/bin"
   "${HOME}/.cargo/bin"
   "${HOME}/perl5/perlbrew/bin"
@@ -27,6 +28,7 @@ path=(
   /sbin
   /usr/bin
   /usr/sbin
+  /usr/local/bin
   /opt/X11/bin
 )
 
